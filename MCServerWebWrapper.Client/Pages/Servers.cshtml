@@ -1,0 +1,125 @@
+@page "/servers"
+@using Blazor.Extensions
+@using MCServerWebWrapper.Shared.SignalR
+@using MCServerWebWrapper.Shared.DTOs
+@inject IJSRuntime JSRuntime
+@inject HttpClient Http
+
+<div class="container-fluid">
+	<div class="row">
+		<h1>Minecraft Servers</h1>
+	</div>
+	<div class="row">
+		<div class="col-lg">
+			<div class="card card-body">
+				<div class="server-output" id="output-list">
+					@foreach (var line in outputLines)
+					{
+						<samp>@line<br></samp>
+					}
+				</div>
+			</div>
+			<input class="form-control" type="text" bind="@consoleInput" placeholder="Console Input" />
+			<button onclick=@(e => this.SendConsoleInput()) type="submit" class="btn btn-primary">Send Input</button>
+		</div>
+		<div class="col-sm">
+			<button onclick=@(e => this.StartServer()) type="button" class="btn btn-primary">Start Server</button>
+			<button onclick=@(e => this.StopServer()) type="button" class="btn btn-danger">Stop Server</button>
+			<div class="card card-body">
+				<form>
+					<div class="row">
+						<div class="col">
+							<input bind="@serverName" type="text" class="form-control" placeholder="Server Name" required/>
+						</div>
+						<div class="col">
+							<div class="form-group">
+								<label for="maxRam">Max Ram in MB: @maxRam</label>
+								<input bind="@maxRam" type="range" min="512" max="8192" step="512" class="form-control-range" id="maxRam" />
+							</div>
+							<div class="form-group">
+								<label for="minRam">Minimum Ram in MB: @minRam</label>
+								<input bind="@minRam" type="range" min="512" max="8192" step="512" class="form-control-range" id="minRam" />
+							</div>
+						</div>
+					</div>
+					<button onclick=@(e => this.NewServer()) type="button" class="btn btn-primary">New Server</button>
+				</form>
+			</div>
+		</div>
+	</div>
+</div>
+
+@functions {
+	string serverId;
+	string consoleInput;
+	string serverName;
+	int maxRam = 2048;
+	int minRam = 2048;
+	MinecraftServerDTO currentServer;
+	List<string> outputLines = new List<string>();
+
+	protected override async Task OnInitAsync()
+	{
+		var connection = new HubConnectionBuilder()
+			.WithUrl("/signalr",
+			opt =>
+			{
+				opt.LogLevel = SignalRLogLevel.Trace;
+				opt.Transport = HttpTransportType.WebSockets;
+			})
+			.Build(JSRuntime);
+
+		connection.On<string, string>(SignalrMethodNames.ServerOutput, this.HandleOutput);
+
+		await connection.StartAsync();
+
+	}
+
+	private async void NewServer()
+	{
+		if (!String.IsNullOrEmpty(serverName) && maxRam >= minRam)
+		{
+			currentServer = await Http.GetJsonAsync<MinecraftServerDTO>($"api/MCServer/NewServer?name={serverName}&maxRamMB={maxRam}&minRamMB={minRam}");
+			serverId = currentServer.Id;
+			Console.WriteLine(serverId);
+			Console.WriteLine(currentServer);
+		}
+	}
+
+	private void SendConsoleInput()
+	{
+
+	}
+
+	private async void StartServer()
+	{
+		if (!String.IsNullOrEmpty(serverId))
+		{
+			outputLines.Add("Starting Server...");
+			this.StateHasChanged();
+			await Http.GetAsync($"api/MCServer/StartServer?id={serverId}");
+		}
+		else
+		{
+			outputLines.Add("No server selected");
+			this.StateHasChanged();
+		}
+	}
+
+	private async void StopServer()
+	{
+		await Http.GetAsync($"api/MCServer/StopServer?id={serverId}");
+	}
+
+	private async Task HandleOutput(string id, string msg)
+	{
+		if (id != serverId) return;
+		else
+		{
+			outputLines.Add(msg);
+			this.StateHasChanged();
+			await JSRuntime.InvokeAsync<bool>("ScrollToBottom");
+			return;
+		}
+	}
+}

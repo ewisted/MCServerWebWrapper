@@ -1,0 +1,259 @@
+{
+  "format": 1,
+  "restore": {
+    "C:\\Users\\RGBeast\\source\\repos\\MCServerWebWrapper\\MCServerWebWrapper.Server\\MCServerWebWrapper.Server.csproj": {}
+  },
+  "projects": {
+    "C:\\Users\\RGBeast\\source\\repos\\MCServerWebWrapper\\MCServerWebWrapper.Client\\MCServerWebWrapper.Client.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\RGBeast\\source\\repos\\MCServerWebWrapper\\MCServerWebWrapper.Client\\MCServerWebWrapper.Client.csproj",
+        "projectName": "MCServerWebWrapper.Client",
+        "projectPath": "C:\\Users\\RGBeast\\source\\repos\\MCServerWebWrapper\\MCServerWebWrapper.Client\\MCServerWebWrapper.Client.csproj",
+        "packagesPath": "C:\\Users\\RGBeast\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\RGBeast\\source\\repos\\MCServerWebWrapper\\MCServerWebWrapper.Client\\obj\\",
+        "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\ProgramData\\Xamarin\\NuGet\\",
+          "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
+        ],
+        "configFilePaths": [
+          "C:\\Users\\RGBeast\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Xamarin.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "netstandard2.0"
+        ],
+        "sources": {
+          "C:\\Nuget": {},
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {},
+          "https://dotnet.myget.org/F/aspnetcore-dev/api/v3/index.json": {},
+          "https://dotnet.myget.org/F/blazor-dev/api/v3/index.json": {}
+        },
+        "frameworks": {
+          "netstandard2.0": {
+            "projectReferences": {
+              "C:\\Users\\RGBeast\\source\\repos\\MCServerWebWrapper\\MCServerWebWrapper.Shared\\MCServerWebWrapper.Shared.csproj": {
+                "projectPath": "C:\\Users\\RGBeast\\source\\repos\\MCServerWebWrapper\\MCServerWebWrapper.Shared\\MCServerWebWrapper.Shared.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "netstandard2.0": {
+          "dependencies": {
+            "Microsoft.AspNetCore.Blazor": {
+              "target": "Package",
+              "version": "[0.9.0-preview3-19154-02, )"
+            },
+            "Microsoft.AspNetCore.Blazor.Build": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[0.9.0-preview3-19154-02, )"
+            },
+            "NETStandard.Library": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[2.0.3, )",
+              "autoReferenced": true
+            },
+            "SignalR.Blazor": {
+              "target": "Package",
+              "version": "[0.9.0, )"
+            }
+          },
+          "imports": [
+            "net461"
+          ],
+          "assetTargetFallback": true,
+          "warn": true
+        }
+      }
+    },
+    "C:\\Users\\RGBeast\\source\\repos\\MCServerWebWrapper\\MCServerWebWrapper.Server\\MCServerWebWrapper.Server.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\RGBeast\\source\\repos\\MCServerWebWrapper\\MCServerWebWrapper.Server\\MCServerWebWrapper.Server.csproj",
+        "projectName": "MCServerWebWrapper.Server",
+        "projectPath": "C:\\Users\\RGBeast\\source\\repos\\MCServerWebWrapper\\MCServerWebWrapper.Server\\MCServerWebWrapper.Server.csproj",
+        "packagesPath": "C:\\Users\\RGBeast\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\RGBeast\\source\\repos\\MCServerWebWrapper\\MCServerWebWrapper.Server\\obj\\",
+        "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\ProgramData\\Xamarin\\NuGet\\",
+          "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
+        ],
+        "configFilePaths": [
+          "C:\\Users\\RGBeast\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Xamarin.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "netcoreapp3.0"
+        ],
+        "sources": {
+          "C:\\Nuget": {},
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {},
+          "https://dotnet.myget.org/F/aspnetcore-dev/api/v3/index.json": {},
+          "https://dotnet.myget.org/F/blazor-dev/api/v3/index.json": {}
+        },
+        "frameworks": {
+          "netcoreapp3.0": {
+            "projectReferences": {
+              "C:\\Users\\RGBeast\\source\\repos\\MCServerWebWrapper\\MCServerWebWrapper.Client\\MCServerWebWrapper.Client.csproj": {
+                "projectPath": "C:\\Users\\RGBeast\\source\\repos\\MCServerWebWrapper\\MCServerWebWrapper.Client\\MCServerWebWrapper.Client.csproj"
+              },
+              "C:\\Users\\RGBeast\\source\\repos\\MCServerWebWrapper\\MCServerWebWrapper.Shared\\MCServerWebWrapper.Shared.csproj": {
+                "projectPath": "C:\\Users\\RGBeast\\source\\repos\\MCServerWebWrapper\\MCServerWebWrapper.Shared\\MCServerWebWrapper.Shared.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "netcoreapp3.0": {
+          "dependencies": {
+            "AutoMapper.Extensions.Microsoft.DependencyInjection": {
+              "target": "Package",
+              "version": "[6.0.0, )"
+            },
+            "Microsoft.AspNetCore.Blazor.Server": {
+              "target": "Package",
+              "version": "[0.9.0-preview3-19154-02, )"
+            },
+            "Microsoft.AspNetCore.Components.Server": {
+              "target": "Package",
+              "version": "[3.0.0-preview3-19153-02, )"
+            },
+            "Microsoft.AspNetCore.Mvc.NewtonsoftJson": {
+              "target": "Package",
+              "version": "[3.0.0-preview3-19153-02, )"
+            },
+            "Microsoft.EntityFrameworkCore.SqlServer": {
+              "target": "Package",
+              "version": "[3.0.0-preview3.19153.1, )"
+            },
+            "Microsoft.EntityFrameworkCore.Tools": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[3.0.0-preview3.19153.1, )"
+            },
+            "Microsoft.Extensions.Logging.Debug": {
+              "target": "Package",
+              "version": "[3.0.0-preview3.19153.1, )"
+            },
+            "Microsoft.NETCore.Platforms": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[3.0.0-preview3.19128.7, )",
+              "autoReferenced": true
+            },
+            "Microsoft.VisualStudio.Web.CodeGeneration.Design": {
+              "target": "Package",
+              "version": "[2.2.3, )"
+            },
+            "Microsoft.WindowsDesktop.App": {
+              "include": "None",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[3.0.0-preview3-27504-2, )",
+              "autoReferenced": true
+            },
+            "MongoDB.Driver": {
+              "target": "Package",
+              "version": "[2.9.0-beta1, )"
+            },
+            "runtime.win-x64.Microsoft.NETCore.DotNetAppHost": {
+              "include": "None",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[3.0.0-preview3-27503-5, )",
+              "autoReferenced": true
+            }
+          },
+          "imports": [
+            "net461"
+          ],
+          "assetTargetFallback": true,
+          "warn": true
+        }
+      }
+    },
+    "C:\\Users\\RGBeast\\source\\repos\\MCServerWebWrapper\\MCServerWebWrapper.Shared\\MCServerWebWrapper.Shared.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\RGBeast\\source\\repos\\MCServerWebWrapper\\MCServerWebWrapper.Shared\\MCServerWebWrapper.Shared.csproj",
+        "projectName": "MCServerWebWrapper.Shared",
+        "projectPath": "C:\\Users\\RGBeast\\source\\repos\\MCServerWebWrapper\\MCServerWebWrapper.Shared\\MCServerWebWrapper.Shared.csproj",
+        "packagesPath": "C:\\Users\\RGBeast\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\RGBeast\\source\\repos\\MCServerWebWrapper\\MCServerWebWrapper.Shared\\obj\\",
+        "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\ProgramData\\Xamarin\\NuGet\\",
+          "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
+        ],
+        "configFilePaths": [
+          "C:\\Users\\RGBeast\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Xamarin.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "netstandard2.0"
+        ],
+        "sources": {
+          "C:\\Nuget": {},
+          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "https://api.nuget.org/v3/index.json": {},
+          "https://dotnetfeed.blob.core.windows.net/aspnet-aspnetcore-tooling/index.json": {},
+          "https://dotnetfeed.blob.core.windows.net/aspnet-aspnetcore/index.json": {},
+          "https://dotnetfeed.blob.core.windows.net/aspnet-entityframeworkcore/index.json": {},
+          "https://dotnetfeed.blob.core.windows.net/aspnet-extensions/index.json": {},
+          "https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json": {},
+          "https://dotnetfeed.blob.core.windows.net/dotnet-windowsdesktop/index.json": {}
+        },
+        "frameworks": {
+          "netstandard2.0": {
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "netstandard2.0": {
+          "dependencies": {
+            "NETStandard.Library": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[2.0.3, )",
+              "autoReferenced": true
+            }
+          },
+          "imports": [
+            "net461"
+          ],
+          "assetTargetFallback": true,
+          "warn": true
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,11 @@
+C:\Users\RGBeast\.nuget\packages\microsoft.aspnetcore.blazor\0.9.0-preview3-19154-02\lib\netstandard2.0\Microsoft.AspNetCore.Blazor.dll
+C:\Users\RGBeast\.nuget\packages\microsoft.aspnetcore.components\3.0.0-preview3-19153-02\lib\netstandard2.0\Microsoft.AspNetCore.Components.dll
+C:\Users\RGBeast\.nuget\packages\microsoft.aspnetcore.components.browser\3.0.0-preview3-19153-02\lib\netstandard2.0\Microsoft.AspNetCore.Components.Browser.dll
+C:\Users\RGBeast\.nuget\packages\microsoft.extensions.dependencyinjection\3.0.0-preview3.19153.1\lib\netstandard2.0\Microsoft.Extensions.DependencyInjection.dll
+C:\Users\RGBeast\.nuget\packages\microsoft.extensions.dependencyinjection.abstractions\3.0.0-preview3.19153.1\lib\netstandard2.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll
+C:\Users\RGBeast\.nuget\packages\microsoft.jsinterop\3.0.0-preview3.19153.1\lib\netstandard2.0\Microsoft.JSInterop.dll
+C:\Users\RGBeast\.nuget\packages\mono.webassembly.interop\3.0.0-preview3.19153.1\lib\netstandard2.0\Mono.WebAssembly.Interop.dll
+C:\Users\RGBeast\.nuget\packages\system.componentmodel.annotations\4.6.0-preview3.19128.7\lib\netstandard2.0\System.ComponentModel.Annotations.dll
+C:\Users\RGBeast\source\repos\MCServerWebWrapper\SignalR\src\Blazor.Extensions.SignalR\bin\Debug\netstandard2.0\Blazor.Extensions.SignalR.dll
+C:\Users\RGBeast\source\repos\MCServerWebWrapper\SignalR\src\Blazor.Extensions.SignalR.JS\bin\Debug\netstandard2.0\Blazor.Extensions.SignalR.JS.dll
+C:\Users\RGBeast\source\repos\MCServerWebWrapper\MCServerWebWrapper.Shared\bin\Debug\netstandard2.0\MCServerWebWrapper.Shared.dll
