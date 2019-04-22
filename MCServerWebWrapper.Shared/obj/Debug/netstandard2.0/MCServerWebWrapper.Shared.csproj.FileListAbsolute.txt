@@ -1,9 +1,0 @@
-C:\Users\RGBeast\source\repos\MCServerWebWrapper\MCServerWebWrapper.Shared\bin\Debug\netstandard2.0\MCServerWebWrapper.Shared.deps.json
-C:\Users\RGBeast\source\repos\MCServerWebWrapper\MCServerWebWrapper.Shared\bin\Debug\netstandard2.0\MCServerWebWrapper.Shared.dll
-C:\Users\RGBeast\source\repos\MCServerWebWrapper\MCServerWebWrapper.Shared\bin\Debug\netstandard2.0\MCServerWebWrapper.Shared.pdb
-C:\Users\RGBeast\source\repos\MCServerWebWrapper\MCServerWebWrapper.Shared\obj\Debug\netstandard2.0\MCServerWebWrapper.Shared.csprojAssemblyReference.cache
-C:\Users\RGBeast\source\repos\MCServerWebWrapper\MCServerWebWrapper.Shared\obj\Debug\netstandard2.0\MCServerWebWrapper.Shared.csproj.CoreCompileInputs.cache
-C:\Users\RGBeast\source\repos\MCServerWebWrapper\MCServerWebWrapper.Shared\obj\Debug\netstandard2.0\MCServerWebWrapper.Shared.AssemblyInfoInputs.cache
-C:\Users\RGBeast\source\repos\MCServerWebWrapper\MCServerWebWrapper.Shared\obj\Debug\netstandard2.0\MCServerWebWrapper.Shared.AssemblyInfo.cs
-C:\Users\RGBeast\source\repos\MCServerWebWrapper\MCServerWebWrapper.Shared\obj\Debug\netstandard2.0\MCServerWebWrapper.Shared.dll
-C:\Users\RGBeast\source\repos\MCServerWebWrapper\MCServerWebWrapper.Shared\obj\Debug\netstandard2.0\MCServerWebWrapper.Shared.pdb
