@@ -76,5 +76,19 @@ namespace MCServerWebWrapper.Server.Controllers
 			var serverDTO = _mapper.Map<MinecraftServerDTO>(server);
 			return Ok(serverDTO);
 		}
+
+		[HttpGet("[action]")]
+		public async Task<IActionResult> SendConsoleInput([Required] string serverId, [Required] string msg)
+		{
+			try
+			{
+				await _serverService.SendConsoleInput(serverId, msg);
+			}
+			catch (Exception e)
+			{
+				return StatusCode(500, e.Data);
+			}
+			return Ok();
+		}
 	}
 }

@@ -65,9 +65,14 @@ else
 
 	}
 
-	private void SendConsoleInput()
+	private async void SendConsoleInput()
 	{
-
+		if (!String.IsNullOrEmpty(consoleInput))
+		{
+			await Http.GetAsync($"api/MCServer/SendConsoleInput?serverId={Id}&msg={consoleInput}");
+			consoleInput = "";
+			this.StateHasChanged();
+		}
 	}
 
 	private async void StartServer()

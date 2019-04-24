@@ -91,5 +91,15 @@ namespace MCServerWebWrapper.Server.Services
 
 			return;
 		}
+
+		public async Task SendConsoleInput(string serverId, string msg)
+		{
+			_runningServers.TryGetValue(serverId, out var server);
+			if (server == null)
+			{
+				throw new Exception("Server is not currently running");
+			}
+			await server.Server.StandardInput.WriteLineAsync(msg);
+		}
 	}
 }
