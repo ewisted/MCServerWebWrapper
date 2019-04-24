@@ -57,15 +57,22 @@ namespace MCServerWebWrapper.Server.Controllers
 		}
 
 		[HttpGet("[action]")]
-		public IActionResult GetAllServerNames()
+		public IActionResult GetAllServers()
 		{
-			var names = _repo.GetServers().Select(s => s.Name).ToList();
-			return Ok(names);
+			var servers = _repo.GetServers();
+			var serversDTO = new List<MinecraftServerDTO>();
+			foreach (var server in servers)
+			{
+				var serverDTO = _mapper.Map<MinecraftServerDTO>(server);
+				serversDTO.Add(serverDTO);
+			}
+			return Ok(serversDTO);
 		}
 
-		public async Task<IActionResult> GetServerByName([Required] string name)
+		[HttpGet("[action]")]
+		public async Task<IActionResult> GetServerById([Required] string id)
 		{
-			var server = await _repo.GetServerByName(name);
+			var server = await _repo.GetServerById(id);
 			var serverDTO = _mapper.Map<MinecraftServerDTO>(server);
 			return Ok(serverDTO);
 		}

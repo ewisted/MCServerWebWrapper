@@ -47,7 +47,8 @@ namespace MCServerWebWrapper.Server.Services
 				IsRunning = false,
 				Name = name,
 				MaxRamMB = maxRamMB,
-				MinRamMB = minRamMB
+				MinRamMB = minRamMB,
+				HasAcceptedEula = false
 			};
 			await _repo.AddServer(server);
 			return server;
@@ -71,6 +72,8 @@ namespace MCServerWebWrapper.Server.Services
 
 			_runningServers.TryAdd(server.Id, serverProcess);
 			serverProcess.StartServer(_logger, _blazorHub);
+
+
 
 			return;
 		}

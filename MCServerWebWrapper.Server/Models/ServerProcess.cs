@@ -16,14 +16,12 @@ namespace MCServerWebWrapper.Server.Models
 	public class ServerProcess
 	{
 		public Process Server { get; private set; }
+		private ProcessStartInfo StartInfo { get; set; }
 		public bool HasAcceptedEula { get; set; }
 		public string ServerId { get; private set; }
-		public int ProcessId { get; private set; }
+		public int ProcessId { get; set; }
 		public int MaxRamMb { get; private set; }
 		public int MinRamMb { get; private set; }
-		public StreamWriter Console { get; private set; }
-		public DataReceivedEventHandler OutputReceived { get; set; }
-		public DataReceivedEventHandler ErrorReceived { get; set; }
 
 		public ServerProcess(string serverId, int maxRam, int minRam)
 		{
@@ -34,26 +32,18 @@ namespace MCServerWebWrapper.Server.Models
 			var buildPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 			var serverDirectory = Directory.CreateDirectory(Path.Combine(buildPath, serverId));
 			var jarPath = Path.Combine(buildPath, "LargeFiles", "server.jar");
-
-			try
-			{
-				File.Copy(jarPath, Path.Combine(serverDirectory.FullName, "server.jar"), true);
-			}
-			catch (Exception e)
-			{
-				throw e;
-			}
+			File.Copy(jarPath, Path.Combine(serverDirectory.FullName, "server.jar"), true);
 			
-			var startInfo = new ProcessStartInfo("java", $"-Xmx{MaxRamMb}M -Xms{MinRamMb}M -jar server.jar nogui");
-			startInfo.WorkingDirectory = serverDirectory.FullName;
-			startInfo.RedirectStandardOutput = true;
-			startInfo.RedirectStandardInput = true;
-			startInfo.RedirectStandardError = true;
-			startInfo.CreateNoWindow = true;
-			startInfo.UseShellExecute = false;
+			StartInfo = new ProcessStartInfo("java", $"-Xmx{MaxRamMb}M -Xms{MinRamMb}M -jar server.jar nogui");
+			StartInfo.WorkingDirectory = serverDirectory.FullName;
+			StartInfo.RedirectStandardOutput = true;
+			StartInfo.RedirectStandardInput = true;
+			StartInfo.RedirectStandardError = true;
+			StartInfo.CreateNoWindow = true;
+			StartInfo.UseShellExecute = false;
 
 			Server = new Process();
-			Server.StartInfo = startInfo;
+			Server.StartInfo = StartInfo;
 			Server.EnableRaisingEvents = true;
 		}
 
@@ -72,6 +62,7 @@ namespace MCServerWebWrapper.Server.Models
 					Server.Exited -= handler;
 					Server.Start();
 					Server.BeginOutputReadLine();
+					ProcessId = Server.Id;
 				};
 				Server.Exited += handler;
 			}
@@ -83,7 +74,6 @@ namespace MCServerWebWrapper.Server.Models
 			Server.Start();
 			Server.BeginOutputReadLine();
 			ProcessId = Server.Id;
-			Console = Server.StandardInput;
 		}
 
 		public async Task StopServer()

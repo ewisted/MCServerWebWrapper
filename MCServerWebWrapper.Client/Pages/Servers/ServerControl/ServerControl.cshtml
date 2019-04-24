@@ -1,0 +1,96 @@
+@page "/server/{Id}"
+@using Blazor.Extensions
+@using MCServerWebWrapper.Shared.SignalR
+@using MCServerWebWrapper.Shared.DTOs
+@inject IJSRuntime JSRuntime
+@inject HttpClient Http
+
+@if (currentServer == null)
+{
+	<p><em>Loading...</em></p>
+}
+else
+{
+	<div class="container-fluid">
+		<div class="row">
+			<h1>@currentServer.Name</h1>
+		</div>
+		<div class="row">
+			<div class="col-lg">
+				<div class="card card-body">
+					<div class="server-output" id="output-list">
+						@foreach (var line in outputLines)
+						{
+							<samp>@line<br></samp>
+						}
+					</div>
+				</div>
+				<input class="form-control" type="text" bind="@consoleInput" placeholder="Console Input" />
+				<button onclick=@(e => this.SendConsoleInput()) type="submit" class="btn btn-primary">Send Input</button>
+			</div>
+			<div class="col-sm">
+				<button onclick=@(e => this.StartServer()) type="button" class="btn btn-primary">Start Server</button>
+				<button onclick=@(e => this.StopServer()) type="button" class="btn btn-danger">Stop Server</button>
+			</div>
+		</div>
+	</div>
+}
+
+
+@functions {
+	[Parameter]
+	string Id { get; set; }
+	string consoleInput;
+	MinecraftServerDTO currentServer;
+	List<string> outputLines = new List<string>();
+
+	protected override async Task OnInitAsync()
+	{
+		currentServer = await Http.GetJsonAsync<MinecraftServerDTO>($"api/MCServer/GetServerById?id={Id}");
+		Console.WriteLine($"Server loaded: {currentServer.Name}");
+		this.StateHasChanged();
+
+		var connection = new HubConnectionBuilder()
+			.WithUrl("/signalr",
+			opt =>
+			{
+				opt.LogLevel = SignalRLogLevel.Trace;
+				opt.Transport = HttpTransportType.WebSockets;
+			})
+			.Build(JSRuntime);
+
+		connection.On<string, string>(SignalrMethodNames.ServerOutput, this.HandleOutput);
+
+		await connection.StartAsync();
+
+	}
+
+	private void SendConsoleInput()
+	{
+
+	}
+
+	private async void StartServer()
+	{
+		outputLines.Add("Starting Server...");
+		this.StateHasChanged();
+		await Http.GetAsync($"api/MCServer/StartServer?id={Id}");
+	}
+
+	private async void StopServer()
+	{
+		await Http.GetAsync($"api/MCServer/StopServer?id={Id}");
+	}
+
+	private async Task HandleOutput(string id, string msg)
+	{
+		if (id != Id) return;
+		else
+		{
+			outputLines.Add(msg);
+			this.StateHasChanged();
+			await JSRuntime.InvokeAsync<bool>("ScrollToBottom");
+			return;
+		}
+	}
+}

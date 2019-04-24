@@ -1,0 +1,89 @@
+@page "/server-list"
+@using MCServerWebWrapper.Shared.DTOs
+@inject HttpClient Http
+@inject Microsoft.AspNetCore.Blazor.Services.WebAssemblyUriHelper UriHelper
+
+@if (servers == null)
+{
+	<p><em>Loading...</em></p>
+}
+else
+{
+	<div class="container-fluid">
+		<div class="row">
+			<h1>Minecraft Servers</h1>
+		</div>
+		<div class="row">
+			<div class="col-lg">
+				<table class="table table-hover">
+					<thead>
+						<tr>
+							<th scope="col">Name</th>
+							<th scope="col">Running</th>
+						</tr>
+					</thead>
+					<tbody>
+						@foreach (var server in servers)
+						{
+							<tr onclick=@(e => GoToServer(server.Id))>
+								<td>@server.Name</td>
+								<td>@server.IsRunning</td>
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+			<div class="col-sm">
+				<div class="card card-body">
+					<form>
+						<div class="row">
+							<div class="col">
+								<input bind="@newServerName" type="text" class="form-control" placeholder="Server Name" required />
+							</div>
+							<div class="col">
+								<div class="form-group">
+									<label for="maxRam">Max Ram in MB: @maxRam</label>
+									<input bind="@maxRam" type="range" min="512" max="8192" step="512" class="form-control-range" id="maxRam" />
+								</div>
+								<div class="form-group">
+									<label for="minRam">Minimum Ram in MB: @minRam</label>
+									<input bind="@minRam" type="range" min="512" max="8192" step="512" class="form-control-range" id="minRam" />
+								</div>
+							</div>
+						</div>
+						<button onclick=@(e => this.NewServer()) type="button" class="btn btn-primary">New Server</button>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+}
+
+
+@functions {
+	string newServerName;
+	int maxRam = 2048;
+	int minRam = 2048;
+	List<MinecraftServerDTO> servers;
+
+	protected override async Task OnInitAsync()
+	{
+		servers = await Http.GetJsonAsync<List<MinecraftServerDTO>>("api/MCServer/GetAllServers");
+		this.StateHasChanged();
+	}
+
+	private void GoToServer(string id)
+	{
+		UriHelper.NavigateTo($"/server/{id}");
+	}
+
+	private async void NewServer()
+	{
+		if (!String.IsNullOrEmpty(newServerName) && maxRam >= minRam)
+		{
+			var newServer = await Http.GetJsonAsync<MinecraftServerDTO>($"api/MCServer/NewServer?name={newServerName}&maxRamMB={maxRam}&minRamMB={minRam}");
+			servers.Add(newServer);
+			this.StateHasChanged();
+		}
+	}
+}
