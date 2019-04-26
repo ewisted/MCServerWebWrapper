@@ -12,6 +12,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using MCServerWebWrapper.Shared.SignalR;
+using System.IO;
+using System.Reflection;
 
 namespace MCServerWebWrapper.Server.Services
 {
@@ -52,6 +54,19 @@ namespace MCServerWebWrapper.Server.Services
 			};
 			await _repo.AddServer(server);
 			return server;
+		}
+
+		public async Task RemoveServer(string id)
+		{
+			_runningServers.TryRemove(id, out var server);
+			if (server != null)
+			{
+				await server.StopServer();
+			}
+			var buildPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+			var serverPath = Path.Combine(buildPath, id);
+			Directory.Delete(serverPath, true);
+			await _repo.RemoveServer(id);
 		}
 
 		public async Task StartServerById(string id)

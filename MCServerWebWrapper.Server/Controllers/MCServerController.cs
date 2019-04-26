@@ -57,6 +57,13 @@ namespace MCServerWebWrapper.Server.Controllers
 		}
 
 		[HttpGet("[action]")]
+		public async Task<IActionResult> RemoveServer([Required] string id)
+		{
+			await _serverService.RemoveServer(id);
+			return Ok();
+		}
+
+		[HttpGet("[action]")]
 		public IActionResult GetAllServers()
 		{
 			var servers = _repo.GetServers();

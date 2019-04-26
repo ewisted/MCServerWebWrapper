@@ -4,6 +4,7 @@
 @using MCServerWebWrapper.Shared.DTOs
 @inject IJSRuntime JSRuntime
 @inject HttpClient Http
+@inject Microsoft.AspNetCore.Blazor.Services.WebAssemblyUriHelper UriHelper
 
 @if (currentServer == null)
 {
@@ -31,6 +32,7 @@ else
 			<div class="col-sm">
 				<button onclick=@(e => this.StartServer()) type="button" class="btn btn-primary">Start Server</button>
 				<button onclick=@(e => this.StopServer()) type="button" class="btn btn-danger">Stop Server</button>
+				<button onclick=@(e => this.RemoveServer()) type="button" class="btn btn-danger">Remove Server</button>
 			</div>
 		</div>
 	</div>
@@ -85,6 +87,12 @@ else
 	private async void StopServer()
 	{
 		await Http.GetAsync($"api/MCServer/StopServer?id={Id}");
+	}
+
+	private async void RemoveServer()
+	{
+		await Http.GetAsync($"api/MCServer/RemoveServer?id={Id}");
+		UriHelper.NavigateTo($"/server-list");
 	}
 
 	private async Task HandleOutput(string id, string msg)
