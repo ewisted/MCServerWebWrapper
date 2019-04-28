@@ -86,9 +86,10 @@ namespace MCServerWebWrapper.Server.Services
 			var serverProcess = new ServerProcess(server.Id, server.MaxRamMB, server.MinRamMB);
 
 			_runningServers.TryAdd(server.Id, serverProcess);
-			serverProcess.StartServer(_logger, _blazorHub);
-
-
+			var pId = serverProcess.StartServer(_logger, _blazorHub);
+			server.ProcessId = pId;
+			server.IsRunning = true;
+			await _repo.UpsertServer(server);
 
 			return;
 		}
@@ -103,6 +104,11 @@ namespace MCServerWebWrapper.Server.Services
 			}
 
 			await server.StopServer();
+
+			var dbServer = await _repo.GetServerById(id);
+			dbServer.IsRunning = false;
+			dbServer.ProcessId = null;
+			await _repo.UpsertServer(dbServer);
 
 			return;
 		}

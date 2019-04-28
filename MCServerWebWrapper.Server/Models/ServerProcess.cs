@@ -17,9 +17,7 @@ namespace MCServerWebWrapper.Server.Models
 	{
 		public Process Server { get; private set; }
 		private ProcessStartInfo StartInfo { get; set; }
-		public bool HasAcceptedEula { get; set; }
 		public string ServerId { get; private set; }
-		public int ProcessId { get; set; }
 		public int MaxRamMb { get; private set; }
 		public int MinRamMb { get; private set; }
 
@@ -31,8 +29,15 @@ namespace MCServerWebWrapper.Server.Models
 
 			var buildPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 			var serverDirectory = Directory.CreateDirectory(Path.Combine(buildPath, serverId));
-			var jarPath = Path.Combine(buildPath, "LargeFiles", "server.jar");
-			File.Copy(jarPath, Path.Combine(serverDirectory.FullName, "server.jar"), true);
+			var serverJarPath = Path.Combine(serverDirectory.FullName, "server.jar");
+			if (!File.Exists(serverJarPath))
+			{
+				var jarPath = Path.Combine(buildPath, "LargeFiles", "server.jar");
+				File.Copy(jarPath, serverJarPath, true);
+				var eulaPath = Path.Combine(buildPath, ServerId, "eula.txt");
+				var newEulaPath = Path.Combine(buildPath, "LargeFiles", "eula.txt");
+				File.Copy(newEulaPath, eulaPath, true);
+			}
 			
 			StartInfo = new ProcessStartInfo("java", $"-Xmx{MaxRamMb}M -Xms{MinRamMb}M -jar server.jar nogui");
 			StartInfo.WorkingDirectory = serverDirectory.FullName;
@@ -47,25 +52,8 @@ namespace MCServerWebWrapper.Server.Models
 			Server.EnableRaisingEvents = true;
 		}
 
-		public void StartServer(ILogger logger, IHubContext<BlazorHub> blazorHub)
+		public int StartServer(ILogger logger, IHubContext<BlazorHub> blazorHub)
 		{
-			if (!HasAcceptedEula)
-			{
-				EventHandler handler = null;
-				handler = (obj, eventArgs) =>
-				{
-					Server.CancelOutputRead();
-					var buildPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-					var eulaPath = Path.Combine(buildPath, ServerId, "eula.txt");
-					var newEulaPath = Path.Combine(buildPath, "LargeFiles", "eula.txt");
-					File.Copy(newEulaPath, eulaPath, true);
-					Server.Exited -= handler;
-					Server.Start();
-					Server.BeginOutputReadLine();
-					ProcessId = Server.Id;
-				};
-				Server.Exited += handler;
-			}
 			Server.OutputDataReceived += async (sender, args) =>
 			{
 				logger.Log(LogLevel.Information, args.Data);
@@ -73,13 +61,16 @@ namespace MCServerWebWrapper.Server.Models
 			};
 			Server.Start();
 			Server.BeginOutputReadLine();
-			ProcessId = Server.Id;
+			return Server.Id;
 		}
 
 		public async Task StopServer()
 		{
+			Server.Exited += (sender, eArgs) =>
+			{
+				Server.Dispose();
+			};
 			await Server.StandardInput.WriteLineAsync("stop");
-			// TODO: We need to dispose of the process here, but we need to make sure the server has stopped first
 		}
 	}
 }
