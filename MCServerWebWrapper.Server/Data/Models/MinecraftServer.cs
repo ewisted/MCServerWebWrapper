@@ -13,7 +13,6 @@ namespace MCServerWebWrapper.Server.Data.Models
 		[BsonRepresentation(BsonType.ObjectId)]
 		public string Id { get; set; }
 		public string Name { get; set; }
-		public bool HasAcceptedEula { get; set; }
 		public bool IsRunning { get; set; }
 		public int? ProcessId { get; set; }
 		public int Port { get; set; }

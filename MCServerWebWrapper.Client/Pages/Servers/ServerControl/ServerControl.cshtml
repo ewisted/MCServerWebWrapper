@@ -12,36 +12,59 @@
 }
 else
 {
-	<div class="container-fluid">
-		<div class="row">
-			<h1>@currentServer.Name</h1>
-		</div>
-		<div class="row">
-			<div class="col-lg">
-				<div class="card card-body">
-					<div class="server-output" id="output-list">
-						@foreach (var line in outputLines)
-						{
-							<samp>@line<br></samp>
-						}
-					</div>
+<div class="container-fluid">
+	<div class="row">
+		<h1>@currentServer.Name</h1>
+	</div>
+	<div class="row">
+		<div class="col-lg">
+			<div class="card card-body">
+				<div class="server-output" id="output-list">
+					@foreach (var line in outputLines)
+					{
+						<samp>@line<br></samp>
+					}
 				</div>
-				<input class="form-control" type="text" bind="@consoleInput" placeholder="Console Input" />
-				<button onclick=@(e => this.SendConsoleInput()) type="submit" class="btn btn-primary">Send Input</button>
 			</div>
-			<div class="col-sm">
-				<button onclick=@(e => this.StartServer()) type="button" class="btn btn-primary">Start Server</button>
+			<input class="form-control" type="text" bind="@consoleInput" placeholder="Console Input" />
+			<button onclick=@(e => this.SendConsoleInput()) type="submit" class="btn btn-primary">Send Input</button>
+		</div>
+		<div class="col-sm">
+			@if (currentServer.IsRunning)
+			{
 				<button onclick=@(e => this.StopServer()) type="button" class="btn btn-danger">Stop Server</button>
+			}
+			else
+			{
+				<button onclick=@(e => this.StartServer()) type="button" class="btn btn-primary">Start Server</button>
 				<button onclick=@(e => this.RemoveServer()) type="button" class="btn btn-danger">Remove Server</button>
-			</div>
+			}
 		</div>
 	</div>
+	@if (!currentServer.IsRunning)
+	{
+		<div class="row">
+			<div class="col">
+				<div class="form-group">
+					<label for="maxRam">Max Ram in MB: @maxRam</label>
+					<input bind="@maxRam" type="range" min="512" max="8192" step="512" class="form-control-range" id="maxRam" />
+				</div>
+				<div class="form-group">
+					<label for="minRam">Minimum Ram in MB: @minRam</label>
+					<input bind="@minRam" type="range" min="512" max="8192" step="512" class="form-control-range" id="minRam" />
+				</div>
+			</div>
+		</div>
+	}
+</div>
 }
 
 
 @functions {
 	[Parameter]
 	string Id { get; set; }
+	int maxRam = 2048;
+	int minRam = 2048;
 	string consoleInput;
 	MinecraftServerDTO currentServer;
 	List<string> outputLines = new List<string>();

@@ -40,16 +40,6 @@ else
 							<div class="col">
 								<input bind="@newServerName" type="text" class="form-control" placeholder="Server Name" required />
 							</div>
-							<div class="col">
-								<div class="form-group">
-									<label for="maxRam">Max Ram in MB: @maxRam</label>
-									<input bind="@maxRam" type="range" min="512" max="8192" step="512" class="form-control-range" id="maxRam" />
-								</div>
-								<div class="form-group">
-									<label for="minRam">Minimum Ram in MB: @minRam</label>
-									<input bind="@minRam" type="range" min="512" max="8192" step="512" class="form-control-range" id="minRam" />
-								</div>
-							</div>
 						</div>
 						<button onclick=@(e => this.NewServer()) type="button" class="btn btn-primary">New Server</button>
 					</form>
