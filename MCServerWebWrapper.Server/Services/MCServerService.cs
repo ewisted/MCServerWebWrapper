@@ -50,7 +50,7 @@ namespace MCServerWebWrapper.Server.Services
 				IsRunning = false,
 				Name = name,
 				MaxRamMB = maxRamMB,
-				MinRamMB = minRamMB,
+				MinRamMB = minRamMB
 			};
 
 			// Build the server path

@@ -9,6 +9,7 @@ using Newtonsoft.Json.Serialization;
 using System.Linq;
 using AutoMapper;
 using MCServerWebWrapper.Server.Hubs;
+using System;
 
 namespace MCServerWebWrapper.Server
 {
@@ -18,7 +19,7 @@ namespace MCServerWebWrapper.Server
 		// For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
 		public void ConfigureServices(IServiceCollection services)
 		{
-			services.AddAutoMapper();
+			services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 			services.AddSignalR();
 			services.AddSingleton<MCServerService>();
 			services.AddTransient<IServerRepo, ServerMongoRepo>();
@@ -47,9 +48,11 @@ namespace MCServerWebWrapper.Server
 				routes.MapHub<BlazorHub>("/signalr");
 			});
 
-			app.UseMvc(routes =>
+			app.UseStaticFiles();
+			app.UseRouting();
+			app.UseEndpoints(endpoints =>
 			{
-				routes.MapRoute(name: "default", template: "{controller}/{action}/{id?}");
+				endpoints.MapDefaultControllerRoute();
 			});
 
 			app.UseBlazor<Client.Startup>();
