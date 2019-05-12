@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using MCServerWebWrapper.Shared.SignalR;
 using System.IO;
 using System.Reflection;
+using AutoMapper;
 
 namespace MCServerWebWrapper.Server.Services
 {
@@ -50,8 +51,27 @@ namespace MCServerWebWrapper.Server.Services
 				Name = name,
 				MaxRamMB = maxRamMB,
 				MinRamMB = minRamMB,
-				HasAcceptedEula = false
 			};
+
+			// Build the server path
+			var buildPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+			var serverDirectory = Directory.CreateDirectory(Path.Combine(buildPath, server.Id));
+
+			// Copy in server jar
+			var serverJarPath = Path.Combine(serverDirectory.FullName, "server.jar");
+			var jarPath = Path.Combine(buildPath, "LargeFiles", "server.jar");
+			File.Copy(jarPath, serverJarPath, true);
+
+			// Copy in eula
+			var eulaPath = Path.Combine(buildPath, server.Id, "eula.txt");
+			var newEulaPath = Path.Combine(buildPath, "LargeFiles", "eula.txt");
+			File.Copy(newEulaPath, eulaPath, true);
+
+			// Set server properties of db object
+			var properties = new ServerProperties();
+			await properties.Save(Path.Combine(serverDirectory.FullName, "server.properties"));
+			server.Properties = properties as Properties;
+
 			await _repo.AddServer(server);
 			return server;
 		}

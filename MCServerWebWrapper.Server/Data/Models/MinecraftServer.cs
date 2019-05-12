@@ -13,10 +13,9 @@ namespace MCServerWebWrapper.Server.Data.Models
 		[BsonRepresentation(BsonType.ObjectId)]
 		public string Id { get; set; }
 		public string Name { get; set; }
+		public Properties Properties { get; set; }
 		public bool IsRunning { get; set; }
 		public int? ProcessId { get; set; }
-		public int Port { get; set; }
-		public string WorldName { get; set; }
 		public int MaxRamMB { get; set; }
 		public int MinRamMB { get; set; }
 		public string MinecraftVersion { get; set; }
@@ -27,6 +26,5 @@ namespace MCServerWebWrapper.Server.Data.Models
 		public TimeSpan UpTimeSinceLastRestart { get; set; }
 		public int PercentUpTime { get; set; }
 		public int PlayersConnected { get; set; }
-
 	}
 }
