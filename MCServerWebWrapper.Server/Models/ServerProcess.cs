@@ -17,6 +17,7 @@ namespace MCServerWebWrapper.Server.Models
 	{
 		public Process Server { get; private set; }
 		private ProcessStartInfo StartInfo { get; set; }
+		public ServerProperties Properties { get; set; }
 		public string ServerId { get; private set; }
 		public int MaxRamMb { get; private set; }
 		public int MinRamMb { get; private set; }
@@ -29,16 +30,7 @@ namespace MCServerWebWrapper.Server.Models
 
 			var buildPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 			var serverDirectory = Directory.CreateDirectory(Path.Combine(buildPath, serverId));
-			var serverJarPath = Path.Combine(serverDirectory.FullName, "server.jar");
-			if (!File.Exists(serverJarPath))
-			{
-				var jarPath = Path.Combine(buildPath, "LargeFiles", "server.jar");
-				File.Copy(jarPath, serverJarPath, true);
-				var eulaPath = Path.Combine(buildPath, ServerId, "eula.txt");
-				var newEulaPath = Path.Combine(buildPath, "LargeFiles", "eula.txt");
-				File.Copy(newEulaPath, eulaPath, true);
-			}
-			
+
 			StartInfo = new ProcessStartInfo("java", $"-Xmx{MaxRamMb}M -Xms{MinRamMb}M -jar server.jar nogui");
 			StartInfo.WorkingDirectory = serverDirectory.FullName;
 			StartInfo.RedirectStandardOutput = true;
@@ -52,12 +44,12 @@ namespace MCServerWebWrapper.Server.Models
 			Server.EnableRaisingEvents = true;
 		}
 
-		public int StartServer(ILogger logger, IHubContext<BlazorHub> blazorHub)
+		public int StartServer(ILogger logger, IHubContext<AngularHub> angularHub)
 		{
 			Server.OutputDataReceived += async (sender, args) =>
 			{
 				logger.Log(LogLevel.Information, args.Data);
-				await blazorHub.Clients.All.SendAsync(SignalrMethodNames.ServerOutput, ServerId, args.Data);
+				await angularHub.Clients.All.SendAsync(SignalrMethodNames.ServerOutput, ServerId, args.Data);
 			};
 			Server.Start();
 			Server.BeginOutputReadLine();

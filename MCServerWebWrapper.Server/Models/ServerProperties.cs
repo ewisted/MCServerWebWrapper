@@ -1,59 +1,22 @@
-﻿using System;
+﻿using MCServerWebWrapper.Server.Data.Models;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+using System.Text;
+using Newtonsoft.Json.Linq;
 
 namespace MCServerWebWrapper.Server.Models
 {
-	public class ServerProperties
+	public class ServerProperties : Properties
 	{
-		public bool AllowFlight { get; set; }
-		public bool AllowNether { get; set; }
-		public int Difficulty { get; set; }
-		public bool EnableQuery { get; set; }
-		public bool EnableRcon { get; set; }
-		public bool EnableCommandBlock { get; set; }
-		public bool ForceGamemode { get; set; }
-		public int Gamemode { get; set; }
-		public bool GenerateStructures { get; set; }
-		public string GeneratorSettings { get; set; }
-		public bool Hardcore { get; set; }
-		public string LevelName { get; set; }
-		public string LevelSeed { get; set; }
-		public string LevelType { get; set; }
-		public int MaxBuildHeight { get; set; }
-		public int MaxPlayers { get; set; }
-		public int MaxTickTime { get; set; }
-		public int MaxWorldSize { get; set; }
-		public string MOTD { get; set; }
-		public int NetworkCompressionThreshold { get; set; }
-		public bool OnlineMode { get; set; }
-		public int OpPermissionLevel { get; set; }
-		public int PlayerIdleTimeout { get; set; }
-		public bool PreventProxyConnections { get; set; }
-		public bool Pvp { get; set; }
-		public int QueryPort { get; set; }
-		public string RconPassword { get; set; }
-		public int RconPort { get; set; }
-		public string ResourcePack { get; set; }
-		public string ResourcePackSha1 { get; set; }
-		public string ServerIP { get; set; }
-		public int ServerPort { get; set; }
-		public bool SnooperEnabled { get; set; }
-		public bool SpawnAnimals { get; set; }
-		public bool SpawnMonsters { get; set; }
-		public bool SpawnNpcs { get; set; }
-		public int SpawnProtection { get; set; }
-		public bool UseNativeTransport { get; set; }
-		public int ViewDistance { get; set; }
-		public bool WhiteList { get; set; }
-		public bool EnforceWhiteList { get; set; }
-		
 		public ServerProperties()
 		{
 			AllowFlight = false;
 			AllowNether = true;
+			BroadcastConsoleToOps = true;
 			Difficulty = 1;
 			EnableQuery = false;
 			EnableRcon = false;
@@ -77,9 +40,6 @@ namespace MCServerWebWrapper.Server.Models
 			PlayerIdleTimeout = 0;
 			PreventProxyConnections = false;
 			Pvp = true;
-			QueryPort = 25565;
-			RconPassword = "";
-			RconPort = 25575;
 			ResourcePack = "";
 			ResourcePackSha1 = "";
 			ServerIP = "";
@@ -92,69 +52,91 @@ namespace MCServerWebWrapper.Server.Models
 			UseNativeTransport = true;
 			ViewDistance = 10;
 			WhiteList = false;
-			EnforceWhiteList = false;
+			EnforceWhitelist = false;
 		}
 
-		public async Task Save(string serverPropertiesPath)
+		public ServerProperties FromFile(string serverPropertiesPath)
 		{
-			if (File.Exists(serverPropertiesPath))
+			var jsonObject = new JObject();
+			using (var streamReader = File.OpenText(serverPropertiesPath))
 			{
-				File.Delete(serverPropertiesPath);
+				while (!streamReader.EndOfStream)
+				{
+					var line = streamReader.ReadLine();
+					if (!line.StartsWith("#"))
+					{
+						var lineKeyAndValue = line.Split("=");
+						var key = KeyToPascalCase(lineKeyAndValue[0]);
+						var value = lineKeyAndValue[1];
+						if (Int32.TryParse(value, out int intValue))
+						{
+							jsonObject.Add(key, intValue);
+						}
+						else if (Boolean.TryParse(value, out var boolValue))
+						{
+							jsonObject.Add(value, boolValue);
+						}
+						else
+						{
+							jsonObject.Add(key, value);
+						}
+					}
+				}
+				streamReader.Dispose();
+			}
+			var serializer = new JsonSerializer();
+			return (ServerProperties)serializer.Deserialize(new JTokenReader(jsonObject), typeof(ServerProperties));
+		}
+
+		private string KeyToPascalCase(string key)
+		{
+			var keyBuilder = new StringBuilder();
+			foreach (var word in key.Split("-"))
+			{
+				keyBuilder.Append(char.ToUpper(word[0]) + word.Substring(1));
+			}
+			return keyBuilder.ToString();
+		}
+
+		private string KeyToPropertiesFormat(string key)
+		{
+			var sb = new StringBuilder();
+
+			for (var i = 0; i < key.Length; i++)
+			{
+				if (i > 0)
+				{
+					if (Char.IsUpper(key[i]) && Char.IsLower(key[i - 1]))
+					{
+						sb.Append("-");
+					}
+				}
+				sb.Append(key[i].ToString().ToLower());
 			}
 
-			using (StreamWriter sw = File.CreateText(serverPropertiesPath))
+			return sb.ToString();
+		}
+
+		public Task Save(string serverPropertiesPath)
+		{
+			var sb = new StringBuilder();
+			using (var reader = File.OpenText(serverPropertiesPath))
 			{
-				await sw.WriteLineAsync("#Minecraft server properties");
-				await sw.WriteLineAsync($"#{DateTime.UtcNow.ToString("ddd MMM dd HH’:’mm’:’ss ‘GMT’ yyyy")}");
-				await sw.WriteLineAsync($"generator-settings={GeneratorSettings}");
-				await sw.WriteLineAsync($"op-permission-level={OpPermissionLevel}");
-				await sw.WriteLineAsync($"allow-nether={AllowNether}");
-				await sw.WriteLineAsync($"enforce-whitelist={EnforceWhiteList}");
-				await sw.WriteLineAsync($"level-name={LevelName}");
-				await sw.WriteLineAsync($"enable-query={EnableQuery}");
-				await sw.WriteLineAsync($"allow-flight={AllowFlight}");
-				await sw.WriteLineAsync($"prevent-proxy-connections={PreventProxyConnections}");
-				await sw.WriteLineAsync($"server-port={ServerPort}");
-				await sw.WriteLineAsync($"max-world-size={MaxWorldSize}");
-				await sw.WriteLineAsync($"level-type={LevelType}");
-				await sw.WriteLineAsync($"enable-rcon={EnableRcon}");
-				await sw.WriteLineAsync($"level-seed={LevelSeed}");
-				await sw.WriteLineAsync($"force-gamemode={ForceGamemode}");
-				await sw.WriteLineAsync($"server-ip={ServerIP}");
-				await sw.WriteLineAsync($"network-compression-threshold={NetworkCompressionThreshold}");
-				await sw.WriteLineAsync($"max-build-height={MaxBuildHeight}");
-				await sw.WriteLineAsync($"spawn-npcs={SpawnNpcs}");
-				await sw.WriteLineAsync($"white-list={WhiteList}");
-				await sw.WriteLineAsync($"spawn-animals={SpawnAnimals}");
-				await sw.WriteLineAsync($"hardcore={Hardcore}");
-				await sw.WriteLineAsync($"snooper-enabled={SnooperEnabled}");
-				await sw.WriteLineAsync($"resource-pack-sha1={ResourcePackSha1}");
-				await sw.WriteLineAsync($"online-mode={OnlineMode}");
-				await sw.WriteLineAsync($"resource-pack={ResourcePack}");
-				await sw.WriteLineAsync($"pvp={Pvp}");
-				await sw.WriteLineAsync($"difficulty={Difficulty}");
-				await sw.WriteLineAsync($"enable-command-block={EnableCommandBlock}");
-				await sw.WriteLineAsync($"gamemode={Gamemode}");
-				await sw.WriteLineAsync($"player-idle-timeout={PlayerIdleTimeout}");
-				await sw.WriteLineAsync($"max-players={MaxPlayers}");
-				await sw.WriteLineAsync($"max-tick-time={MaxTickTime}");
-				await sw.WriteLineAsync($"spawn-monsters={SpawnMonsters}");
-				await sw.WriteLineAsync($"view-distance={ViewDistance}");
-				await sw.WriteLineAsync($"generate-structures={GenerateStructures}");
-				await sw.WriteLineAsync($"motd={MOTD}");
-				await sw.WriteLineAsync($"use-native-transport={UseNativeTransport}");
-				await sw.WriteLineAsync($"spawn-protection={SpawnProtection}");
-				if (EnableRcon)
+				sb.Append(reader.ReadLine());
+				sb.Append(reader.ReadLine());
+				reader.Dispose();
+			}
+			var properties = this.GetType().GetProperties();
+			foreach (var propertyInfo in properties)
+			{
+				var value = propertyInfo.GetValue(this, null);
+				if (value != null)
 				{
-					await sw.WriteLineAsync($"rcon.password={RconPassword}");
-					await sw.WriteLineAsync($"rcon.port={RconPort}");
-				}
-				if (EnableQuery)
-				{
-					await sw.WriteLineAsync($"query.port={QueryPort}");
+					var line = KeyToPropertiesFormat(propertyInfo.Name) + "=" + value;
+					sb.AppendLine(line);
 				}
 			}
-			return;
+			return Task.CompletedTask;
 		}
 	}
 }
