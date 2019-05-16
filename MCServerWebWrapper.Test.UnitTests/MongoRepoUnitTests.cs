@@ -1,11 +1,11 @@
-using MCServerWebWrapper.Server.Data.Models;
-using MCServerWebWrapper.Server.Data;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using System;
 using System.Threading.Tasks;
 using Xunit;
 using System.Linq;
+using MCServerWebWrapper.Server.Data;
+using MCServerWebWrapper.Server.Data.Models;
 
 namespace MCServerWebWrapper.Test.UnitTests
 {

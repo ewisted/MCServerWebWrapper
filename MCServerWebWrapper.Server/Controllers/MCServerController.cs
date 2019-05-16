@@ -26,12 +26,12 @@ namespace MCServerWebWrapper.Server.Controllers
 		}
 
 		[HttpGet("[action]")]
-		public async Task<IActionResult> NewServer([Required] string name, [Required] int maxRamMB, [Required] int minRamMB)
+		public async Task<IActionResult> NewServer([Required] string name)
 		{
 			MinecraftServerDTO serverDTO;
 			try
 			{
-				var server = await _serverService.NewServer(name, maxRamMB, minRamMB);
+				var server = await _serverService.NewServer(name);
 				serverDTO = _mapper.Map<MinecraftServerDTO>(server);
 			}
 			catch (Exception e)
@@ -43,10 +43,17 @@ namespace MCServerWebWrapper.Server.Controllers
 		}
 
 		[HttpGet("[action]")]
-		public async Task<IActionResult> StartServer([Required] string id)
+		public async Task<IActionResult> StartServer([Required] string id, [Required] int maxRamMB, [Required] int minRamMB)
 		{
-			await _serverService.StartServerById(id);
-			return Ok();
+			try
+			{
+				await _serverService.StartServerById(id, maxRamMB, minRamMB);
+			}
+			catch (Exception ex)
+			{
+				return StatusCode(500, ex);
+			}
+			return Ok(true);
 		}
 
 		[HttpGet("[action]")]
@@ -57,17 +64,45 @@ namespace MCServerWebWrapper.Server.Controllers
 		}
 
 		[HttpGet("[action]")]
-		public IActionResult GetAllServerNames()
+		public async Task<IActionResult> RemoveServer([Required] string id)
 		{
-			var names = _repo.GetServers().Select(s => s.Name).ToList();
-			return Ok(names);
+			await _serverService.RemoveServer(id);
+			return Ok();
 		}
 
-		public async Task<IActionResult> GetServerByName([Required] string name)
+		[HttpGet("[action]")]
+		public IActionResult GetAllServers()
 		{
-			var server = await _repo.GetServerByName(name);
+			var servers = _repo.GetServers();
+			var serversDTO = new List<MinecraftServerDTO>();
+			foreach (var server in servers)
+			{
+				var serverDTO = _mapper.Map<MinecraftServerDTO>(server);
+				serversDTO.Add(serverDTO);
+			}
+			return Ok(serversDTO);
+		}
+
+		[HttpGet("[action]")]
+		public async Task<IActionResult> GetServerById([Required] string id)
+		{
+			var server = await _repo.GetServerById(id);
 			var serverDTO = _mapper.Map<MinecraftServerDTO>(server);
 			return Ok(serverDTO);
+		}
+
+		[HttpGet("[action]")]
+		public async Task<IActionResult> SendConsoleInput([Required] string serverId, [Required] string msg)
+		{
+			try
+			{
+				await _serverService.SendConsoleInput(serverId, msg);
+			}
+			catch (Exception e)
+			{
+				return StatusCode(500, e.Data);
+			}
+			return Ok();
 		}
 	}
 }
