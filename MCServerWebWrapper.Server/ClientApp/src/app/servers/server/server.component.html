@@ -1,44 +1,46 @@
-<p *ngIf="!currentServer"><em>Loading...</em></p>
+<p *ngIf="!currentServer; else mainContent"><em>Loading...</em></p>
 
-<div class="container-fluid">
-  <div class="row">
-    <h1>{{currentServer.Name}}</h1>
-  </div>
-  <div class="row">
-    <div class="col-lg">
-      <div class="card card-body">
-        <div class="server-output" id="output-list">
-          <samp *ngFor="let line of outputLines">{{line}}<br></samp>
-        </div>
-      </div>
-      <input class="form-control" id="console-input" type="text" placeholder="Console Input" />
-      <div class="row justify-content-between">
-        <div class="col-auto mr-auto">
-          <button (click)="sendConsoleInput()" type="submit" class="btn btn-primary">Send Input</button>
-        </div>
-        <div class="col-auto">
-          <div *ngIf="isRunning; else notRunning">
-            <button (click)="stopServer()" type="button" class="btn btn-danger">Stop Server</button>
+<ng-template #mainContent>
+  <div class="container-fluid">
+    <div class="row">
+      <h1>{{currentServer.name}}</h1>
+    </div>
+    <div class="row">
+      <div class="col-lg">
+        <div class="card card-body">
+          <div class="server-output" id="output-list">
+            <samp *ngFor="let line of outputLines">{{line}}<br></samp>
           </div>
-          <ng-template #notRunning>
-            <button (click)="startServer()" type="button" class="btn btn-primary">Start Server</button>
-            <button (click)="removeServer()" type="button" class="btn btn-danger">Remove Server</button>
-          </ng-template>
+        </div>
+        <input class="form-control" id="console-input" type="text" placeholder="Console Input" />
+        <div class="row justify-content-between">
+          <div class="col-auto mr-auto">
+            <button (click)="sendConsoleInput()" type="submit" class="btn btn-primary">Send Input</button>
+          </div>
+          <div class="col-auto">
+            <div *ngIf="isRunning; else notRunning">
+              <button (click)="stopServer()" type="button" class="btn btn-danger">Stop Server</button>
+            </div>
+            <ng-template #notRunning>
+              <button (click)="startServer()" type="button" class="btn btn-primary">Start Server</button>
+              <button (click)="removeServer()" type="button" class="btn btn-danger">Remove Server</button>
+            </ng-template>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-auto mr-auto">
+            <label for="maxRam">Max Ram: {{maxRam}}MB</label>
+            <mat-slider class="ram-slider" max="8192" min="512" step="512" thumbLabel=true [disabled]="isRunning" [(ngModel)]="maxRam" id="maxRam"></mat-slider>
+          </div>
+          <div class="col-auto">
+            <label for="minRam">Min Ram: {{minRam}}MB</label>
+            <mat-slider class="ram-slider" max="8192" min="512" step="512" thumbLabel=true [disabled]="isRunning" [(ngModel)]="minRam" id="minRam"></mat-slider>
+          </div>
         </div>
       </div>
-      <div class="row">
-        <div class="col-auto mr-auto">
-          <label for="maxRam">Max Ram: {{maxRam}}MB</label>
-          <mat-slider class="ram-slider" max="8192" min="512" step="512" thumbLabel=true [disabled]="isRunning" [(ngModel)]="maxRam" id="maxRam"></mat-slider>
-        </div>
-        <div class="col-auto">
-          <label for="minRam">Min Ram: {{minRam}}MB</label>
-          <mat-slider class="ram-slider" max="8192" min="512" step="512" thumbLabel=true [disabled]="isRunning" [(ngModel)]="minRam" id="minRam"></mat-slider>
-        </div>
+      <div class="col-sm">
+        <server-properties [id]="serverId"></server-properties>
       </div>
-    </div>
-    <div class="col-sm">
-      
     </div>
   </div>
-</div>
+</ng-template>

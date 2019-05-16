@@ -92,15 +92,29 @@ namespace MCServerWebWrapper.Server.Controllers
 		}
 
 		[HttpGet("[action]")]
+		public async Task<IActionResult> GetServerPropertiesById([Required] string id)
+		{
+			var serverProperties = (await _repo.GetServerById(id)).Properties;
+			if (serverProperties == null)
+			{
+				return NotFound();
+			}
+			else
+			{
+				return Ok(serverProperties);
+			}
+		}
+
+		[HttpGet("[action]")]
 		public async Task<IActionResult> SendConsoleInput([Required] string serverId, [Required] string msg)
 		{
 			try
 			{
 				await _serverService.SendConsoleInput(serverId, msg);
 			}
-			catch (Exception e)
+			catch (Exception ex)
 			{
-				return StatusCode(500, e.Data);
+				return StatusCode(500, ex.Data);
 			}
 			return Ok();
 		}
