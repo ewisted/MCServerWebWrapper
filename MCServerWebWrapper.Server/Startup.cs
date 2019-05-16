@@ -1,61 +1,85 @@
+using AutoMapper;
 using MCServerWebWrapper.Server.Data;
+using MCServerWebWrapper.Server.Hubs;
 using MCServerWebWrapper.Server.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.ResponseCompression;
+using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SpaServices.AngularCli;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Newtonsoft.Json.Serialization;
-using System.Linq;
-using AutoMapper;
-using MCServerWebWrapper.Server.Hubs;
 using System;
 
-namespace MCServerWebWrapper.Server
+namespace MCServerWebWrapper
 {
 	public class Startup
 	{
+		public Startup(IConfiguration configuration)
+		{
+			Configuration = configuration;
+		}
+
+		public IConfiguration Configuration { get; }
+
 		// This method gets called by the runtime. Use this method to add services to the container.
-		// For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
 		public void ConfigureServices(IServiceCollection services)
 		{
 			services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 			services.AddSignalR();
 			services.AddSingleton<MCServerService>();
 			services.AddTransient<IServerRepo, ServerMongoRepo>();
-			services.AddMvc().AddNewtonsoftJson();
-			services.AddResponseCompression(opts =>
+			services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+
+			// In production, the Angular files will be served from this directory
+			services.AddSpaStaticFiles(configuration =>
 			{
-				opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
-					new[] { "application/octet-stream" });
+				configuration.RootPath = "ClientApp/dist";
 			});
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-		public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+		public void Configure(IApplicationBuilder app, IHostingEnvironment env)
 		{
-			app.UseResponseCompression();
-
 			if (env.IsDevelopment())
 			{
 				app.UseDeveloperExceptionPage();
-				app.UseBlazorDebugging();
 			}
-			app.UseCors("allow-all");
-			app.UseWebSockets();
+			else
+			{
+				app.UseExceptionHandler("/Error");
+				// The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+				app.UseHsts();
+			}
+
+			app.UseHttpsRedirection();
+			app.UseStaticFiles();
+			app.UseSpaStaticFiles();
+
 			app.UseSignalR(routes =>
 			{
-				routes.MapHub<BlazorHub>("/signalr");
+				routes.MapHub<AngularHub>("/angular-hub");
 			});
 
-			app.UseStaticFiles();
-			app.UseRouting();
-			app.UseEndpoints(endpoints =>
+			app.UseMvc(routes =>
 			{
-				endpoints.MapDefaultControllerRoute();
+				routes.MapRoute(
+					name: "default",
+					template: "{controller}/{action=Index}/{id?}");
 			});
 
-			app.UseBlazor<Client.Startup>();
+			app.UseSpa(spa =>
+			{
+				// To learn more about options for serving an Angular SPA from ASP.NET Core,
+				// see https://go.microsoft.com/fwlink/?linkid=864501
+
+				spa.Options.SourcePath = "ClientApp";
+
+				if (env.IsDevelopment())
+				{
+					spa.UseAngularCliServer(npmScript: "start");
+				}
+			});
 		}
 	}
 }

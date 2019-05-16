@@ -20,7 +20,7 @@ namespace MCServerWebWrapper.Server.Services
 {
 	public class MCServerService
 	{
-		private readonly IHubContext<BlazorHub> _blazorHub;
+		private readonly IHubContext<AngularHub> _angularHub;
 		private readonly ILogger<MCServerService> _logger;
 		//private static ConcurrentQueue<OutputData> _outputBuffer = 
 		//	new ConcurrentQueue<OutputData>();
@@ -28,14 +28,14 @@ namespace MCServerWebWrapper.Server.Services
 			new ConcurrentDictionary<string, ServerProcess>();
 		private readonly IServerRepo _repo;
 
-		public MCServerService(IHubContext<BlazorHub> blazorHub, ILogger<MCServerService> logger, IServerRepo repo)
+		public MCServerService(IHubContext<AngularHub> angularHub, ILogger<MCServerService> logger, IServerRepo repo)
 		{
-			_blazorHub = blazorHub;
+			_angularHub = angularHub;
 			_logger = logger;
 			_repo = repo;
 		}
 
-		public async Task<MinecraftServer> NewServer(string name, int maxRamMB, int minRamMB)
+		public async Task<MinecraftServer> NewServer(string name)
 		{
 			var server = await _repo.GetServerByName(name);
 			if (server != null)
@@ -49,8 +49,8 @@ namespace MCServerWebWrapper.Server.Services
 				DateCreated = DateTime.UtcNow,
 				IsRunning = false,
 				Name = name,
-				MaxRamMB = maxRamMB,
-				MinRamMB = minRamMB
+				MaxRamMB = 2048,
+				MinRamMB = 2048,
 			};
 
 			// Build the server path
@@ -69,7 +69,6 @@ namespace MCServerWebWrapper.Server.Services
 
 			// Set server properties of db object
 			var properties = new ServerProperties();
-			await properties.Save(Path.Combine(serverDirectory.FullName, "server.properties"));
 			server.Properties = properties as Properties;
 
 			await _repo.AddServer(server);
@@ -89,7 +88,7 @@ namespace MCServerWebWrapper.Server.Services
 			await _repo.RemoveServer(id);
 		}
 
-		public async Task StartServerById(string id)
+		public async Task StartServerById(string id, int maxRamMB, int minRamMB)
 		{
 			var server = await _repo.GetServerById(id);
 			if (server == null)
@@ -103,10 +102,12 @@ namespace MCServerWebWrapper.Server.Services
 				return;
 			}
 
-			var serverProcess = new ServerProcess(server.Id, server.MaxRamMB, server.MinRamMB);
+			var serverProcess = new ServerProcess(server.Id, maxRamMB, minRamMB);
 
 			_runningServers.TryAdd(server.Id, serverProcess);
-			var pId = serverProcess.StartServer(_logger, _blazorHub);
+			var pId = serverProcess.StartServer(_logger, _angularHub);
+			server.MaxRamMB = maxRamMB;
+			server.MinRamMB = minRamMB;
 			server.ProcessId = pId;
 			server.IsRunning = true;
 			await _repo.UpsertServer(server);

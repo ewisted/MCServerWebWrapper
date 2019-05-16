@@ -1,0 +1,9 @@
+.server-output {
+  height: 500px;
+  overflow-y: scroll;
+}
+
+.ram-slider {
+  margin: 10px;
+  width: 300px;
+}

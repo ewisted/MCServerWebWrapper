@@ -26,12 +26,12 @@ namespace MCServerWebWrapper.Server.Controllers
 		}
 
 		[HttpGet("[action]")]
-		public async Task<IActionResult> NewServer([Required] string name, [Required] int maxRamMB, [Required] int minRamMB)
+		public async Task<IActionResult> NewServer([Required] string name)
 		{
 			MinecraftServerDTO serverDTO;
 			try
 			{
-				var server = await _serverService.NewServer(name, maxRamMB, minRamMB);
+				var server = await _serverService.NewServer(name);
 				serverDTO = _mapper.Map<MinecraftServerDTO>(server);
 			}
 			catch (Exception e)
@@ -43,10 +43,17 @@ namespace MCServerWebWrapper.Server.Controllers
 		}
 
 		[HttpGet("[action]")]
-		public async Task<IActionResult> StartServer([Required] string id)
+		public async Task<IActionResult> StartServer([Required] string id, [Required] int maxRamMB, [Required] int minRamMB)
 		{
-			await _serverService.StartServerById(id);
-			return Ok();
+			try
+			{
+				await _serverService.StartServerById(id, maxRamMB, minRamMB);
+			}
+			catch (Exception ex)
+			{
+				return StatusCode(500, ex);
+			}
+			return Ok(true);
 		}
 
 		[HttpGet("[action]")]

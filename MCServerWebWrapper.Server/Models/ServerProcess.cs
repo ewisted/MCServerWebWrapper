@@ -44,12 +44,12 @@ namespace MCServerWebWrapper.Server.Models
 			Server.EnableRaisingEvents = true;
 		}
 
-		public int StartServer(ILogger logger, IHubContext<BlazorHub> blazorHub)
+		public int StartServer(ILogger logger, IHubContext<AngularHub> angularHub)
 		{
 			Server.OutputDataReceived += async (sender, args) =>
 			{
 				logger.Log(LogLevel.Information, args.Data);
-				await blazorHub.Clients.All.SendAsync(SignalrMethodNames.ServerOutput, ServerId, args.Data);
+				await angularHub.Clients.All.SendAsync(SignalrMethodNames.ServerOutput, ServerId, args.Data);
 			};
 			Server.Start();
 			Server.BeginOutputReadLine();
