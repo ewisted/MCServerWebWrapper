@@ -1,0 +1,140 @@
+<p *ngIf="!properties; else propertiesContent"><em>Loading...</em></p>
+
+<ng-template #propertiesContent>
+  <mat-card>
+    <mat-card-content>
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col">
+            <mat-form-field>
+              <input matInput placeholder="Server IP" [(ngModel)]="properties.serverIP" />
+            </mat-form-field>
+            <br>
+            <mat-slide-toggle [(ngModel)]="properties.allowFlight">Allow Flight</mat-slide-toggle><br>
+            <mat-slide-toggle [(ngModel)]="properties.allowNether">Allow Nether</mat-slide-toggle><br>
+            <mat-slide-toggle [(ngModel)]="properties.broadcastConsoleToOps">Broadcast Console To Ops</mat-slide-toggle><br>
+            <mat-slide-toggle [(ngModel)]="properties.enableCommandBlock">Enable Command Blocks</mat-slide-toggle><br>
+            <mat-slide-toggle [(ngModel)]="properties.enforceWhitelist">Enforce Whitelist</mat-slide-toggle><br>
+            <mat-slide-toggle [(ngModel)]="properties.forceGamemode">Force Game Mode</mat-slide-toggle><br>
+            <mat-slide-toggle [(ngModel)]="properties.generateStructures">Generate Structures</mat-slide-toggle><br>
+            <mat-slide-toggle [(ngModel)]="properties.hardcore">Hardcore</mat-slide-toggle><br>
+            <mat-slide-toggle [(ngModel)]="properties.onlineMode">Online Mode</mat-slide-toggle><br>
+            <mat-slide-toggle [(ngModel)]="properties.preventProxyConnections">Prevent Proxy Connections</mat-slide-toggle><br>
+            <mat-slide-toggle [(ngModel)]="properties.pvp">Pvp</mat-slide-toggle><br>
+            <mat-slide-toggle [(ngModel)]="properties.snooperEnabled">Snooper Enabled</mat-slide-toggle><br>
+            <mat-slide-toggle [(ngModel)]="properties.spawnAnimals">Spawn Animals</mat-slide-toggle><br>
+            <mat-slide-toggle [(ngModel)]="properties.spawnMonsters">Spawn Monsters</mat-slide-toggle><br>
+            <mat-slide-toggle [(ngModel)]="properties.spawnNpcs">Spawn NPCs</mat-slide-toggle><br>
+            <mat-slide-toggle [(ngModel)]="properties.useNativeTransport">Use Native Transport</mat-slide-toggle><br>
+            <mat-slide-toggle [(ngModel)]="properties.enableQuery">Enable Query</mat-slide-toggle><br>
+            <mat-slide-toggle [(ngModel)]="properties.enableRcon">Enable Rcon</mat-slide-toggle><br>
+          </div>
+          <div class="col">
+            <mat-form-field>
+              <input matInput type="number" placeholder="Server Port" [(ngModel)]="properties.serverPort" />
+            </mat-form-field>
+            <br>
+            <mat-form-field>
+              <mat-label>Select Difficulty</mat-label>
+              <mat-select [(value)]="properties.difficulty">
+                <mat-option [value]="0">Peaceful</mat-option>
+                <mat-option [value]="1">Easy</mat-option>
+                <mat-option [value]="2">Normal</mat-option>
+                <mat-option [value]="3">Hard</mat-option>
+              </mat-select>
+            </mat-form-field>
+            <br>
+            <mat-form-field>
+              <mat-label>Select Game Mode</mat-label>
+              <mat-select [(value)]="properties.gamemode">
+                <mat-option [value]="0">Survival</mat-option>
+                <mat-option [value]="1">Creative</mat-option>
+                <mat-option [value]="2">Adventure</mat-option>
+                <mat-option [value]="3">Spectator</mat-option>
+              </mat-select>
+            </mat-form-field>
+            <br>
+            <mat-form-field>
+              <mat-label>Select Level Type</mat-label>
+              <mat-select [(value)]="properties.levelType">
+                <mat-option value="DEFAULT">Default</mat-option>
+                <mat-option value="FLAT">Flat</mat-option>
+                <mat-option value="LARGEBIOMES">Large Biomes</mat-option>
+                <mat-option value="AMPLIFIED">Amplified</mat-option>
+                <mat-option value="BUFFET">Buffet</mat-option>
+              </mat-select>
+            </mat-form-field>
+            <br>
+            <mat-form-field>
+              <mat-label>Select Op Permission Level</mat-label>
+              <mat-select [(value)]="properties.opPermissionLevel">
+                <mat-option [value]="1">Ops can bypass spawn protection</mat-option>
+                <mat-option [value]="2">Ops can use all singleplayer cheats commands</mat-option>
+                <mat-option [value]="3">Ops can use most multiplayer-exclusive commands</mat-option>
+                <mat-option [value]="4">Ops can use all commands</mat-option>
+              </mat-select>
+            </mat-form-field>
+            <br>
+            <mat-form-field>
+              <input matInput type="number" placeholder="Network Compression Threshold" [(ngModel)]="properties.networkCompressionThreshold" />
+            </mat-form-field>
+            <br>
+            <mat-form-field>
+              <input matInput type="number" placeholder="Player Idle Timeout" [(ngModel)]="properties.playerIdleTimeout" />
+            </mat-form-field>
+            <br>
+            <mat-form-field>
+              <input matInput type="number" placeholder="Spawn Protection" [(ngModel)]="properties.spawnProtection" />
+            </mat-form-field>
+            <br>
+            <mat-form-field>
+              <input matInput type="number" placeholder="View Distance" [(ngModel)]="properties.viewDistance" />
+            </mat-form-field>
+            <br>
+          </div>
+          <div class="col">
+            <mat-form-field>
+              <input matInput placeholder="MOTD" [(ngModel)]="properties.motd" />
+            </mat-form-field>
+            <br>
+            <mat-form-field>
+              <input matInput placeholder="Level Name" [(ngModel)]="properties.levelName" />
+            </mat-form-field>
+            <br>
+            <mat-form-field>
+              <input matInput placeholder="Level Seed" [(ngModel)]="properties.levelSeed" />
+            </mat-form-field>
+            <br>
+            <mat-form-field>
+              <input matInput placeholder="Generator Settings" [(ngModel)]="properties.generatorSettings" />
+            </mat-form-field>
+            <br>
+            <mat-form-field>
+              <input matInput placeholder="Resource Pack" [(ngModel)]="properties.resourcePack" />
+            </mat-form-field>
+            <br>
+            <mat-form-field>
+              <input matInput type="number" placeholder="Max Build Height" [(ngModel)]="properties.maxBuildHeight" />
+            </mat-form-field>
+            <br>
+            <mat-form-field>
+              <input matInput type="number" placeholder="Max Players" [(ngModel)]="properties.maxPlayers" />
+            </mat-form-field>
+            <br>
+            <mat-form-field>
+              <input matInput type="number" placeholder="Max Tick Time" [(ngModel)]="properties.maxTickTime" />
+            </mat-form-field>
+            <br>
+            <mat-form-field>
+              <input matInput type="number" placeholder="Max World Size" [(ngModel)]="properties.maxWorldSize" />
+            </mat-form-field>
+            <br>
+          </div>
+        </div>
+      </div>
+    </mat-card-content>
+    <mat-card-actions>
+      <button mat-flat-button color="primary" (click)="saveProperties()">Save</button>
+    </mat-card-actions>
+  </mat-card>
+</ng-template>

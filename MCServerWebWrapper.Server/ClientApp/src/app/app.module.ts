@@ -13,6 +13,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MainMaterialModule } from './main-material-module';
 import { ServersComponent } from './servers/servers.component';
 import { ServerComponent } from './servers/server/server.component';
+import { PropertiesComponent } from './servers/server/properties/properties.component';
 
 @NgModule({
   declarations: [
@@ -22,6 +23,7 @@ import { ServerComponent } from './servers/server/server.component';
     CounterComponent,
     ServersComponent,
     ServerComponent,
+    PropertiesComponent,
     FetchDataComponent
   ],
   imports: [
