@@ -29,10 +29,10 @@ namespace MCServerWebWrapper.Server.Models
 			MinRamMb = minRam;
 
 			var buildPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-			var serverDirectory = Directory.CreateDirectory(Path.Combine(buildPath, serverId));
+			var ServerPath = Directory.CreateDirectory(Path.Combine(buildPath, serverId)).FullName;
 
 			StartInfo = new ProcessStartInfo("java", $"-Xmx{MaxRamMb}M -Xms{MinRamMb}M -jar server.jar nogui");
-			StartInfo.WorkingDirectory = serverDirectory.FullName;
+			StartInfo.WorkingDirectory = ServerPath;
 			StartInfo.RedirectStandardOutput = true;
 			StartInfo.RedirectStandardInput = true;
 			StartInfo.RedirectStandardError = true;

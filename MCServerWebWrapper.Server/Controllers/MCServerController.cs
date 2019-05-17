@@ -5,6 +5,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using MCServerWebWrapper.Server.Data;
+using MCServerWebWrapper.Server.Data.Models;
+using MCServerWebWrapper.Server.Models;
 using MCServerWebWrapper.Server.Services;
 using MCServerWebWrapper.Shared.DTOs;
 using Microsoft.AspNetCore.Mvc;
@@ -23,6 +25,24 @@ namespace MCServerWebWrapper.Server.Controllers
 			_serverService = serverService;
 			_mapper = mapper;
 			_repo = repo;
+		}
+
+		[HttpPost("[action]")]
+		public async Task<IActionResult> SaveServerProperties(string id, [FromBody] ServerProperties properties)
+		{
+			if (properties == null)
+			{
+				return StatusCode(400, "Server properties were invalid.");
+			}
+			try
+			{
+				await _serverService.SaveServerProperties(id, properties);
+			}
+			catch (Exception ex)
+			{
+				return StatusCode(500, ex.Message);
+			}
+			return Ok();
 		}
 
 		[HttpGet("[action]")]

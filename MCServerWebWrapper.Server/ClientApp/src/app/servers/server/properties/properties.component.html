@@ -7,31 +7,31 @@
         <div class="row">
           <div class="col">
             <mat-form-field>
-              <input matInput placeholder="Server IP" [(value)]="properties.serverIP" />
+              <input matInput placeholder="Server IP" [(ngModel)]="properties.serverIP" />
             </mat-form-field>
             <br>
-            <mat-slide-toggle [checked]="properties.allowFlight">Allow Flight</mat-slide-toggle><br>
-            <mat-slide-toggle [checked]="properties.allowNether">Allow Nether</mat-slide-toggle><br>
-            <mat-slide-toggle [checked]="properties.broadcastConsoleToOps">Broadcast Console To Ops</mat-slide-toggle><br>
-            <mat-slide-toggle [checked]="properties.enableCommandBlock">Enable Command Blocks</mat-slide-toggle><br>
-            <mat-slide-toggle [checked]="properties.enforceWhitelist">Enforce Whitelist</mat-slide-toggle><br>
-            <mat-slide-toggle [checked]="properties.forceGamemode">Force Game Mode</mat-slide-toggle><br>
-            <mat-slide-toggle [checked]="properties.generateStructures">Generate Structures</mat-slide-toggle><br>
-            <mat-slide-toggle [checked]="properties.hardcore">Hardcore</mat-slide-toggle><br>
-            <mat-slide-toggle [checked]="properties.onlineMode">Online Mode</mat-slide-toggle><br>
-            <mat-slide-toggle [checked]="properties.preventProxyConnections">Prevent Proxy Connections</mat-slide-toggle><br>
-            <mat-slide-toggle [checked]="properties.pvp">Pvp</mat-slide-toggle><br>
-            <mat-slide-toggle [checked]="properties.snooperEnabled">Snooper Enabled</mat-slide-toggle><br>
-            <mat-slide-toggle [checked]="properties.spawnAnimals">Spawn Animals</mat-slide-toggle><br>
-            <mat-slide-toggle [checked]="properties.spawnMonsters">Spawn Monsters</mat-slide-toggle><br>
-            <mat-slide-toggle [checked]="properties.spawnNpcs">Spawn NPCs</mat-slide-toggle><br>
-            <mat-slide-toggle [checked]="properties.useNativeTransport">Use Native Transport</mat-slide-toggle><br>
-            <mat-slide-toggle [checked]="properties.enableQuery">Enable Query</mat-slide-toggle><br>
-            <mat-slide-toggle [checked]="properties.enableRcon">Enable Rcon</mat-slide-toggle><br>
+            <mat-slide-toggle [(ngModel)]="properties.allowFlight">Allow Flight</mat-slide-toggle><br>
+            <mat-slide-toggle [(ngModel)]="properties.allowNether">Allow Nether</mat-slide-toggle><br>
+            <mat-slide-toggle [(ngModel)]="properties.broadcastConsoleToOps">Broadcast Console To Ops</mat-slide-toggle><br>
+            <mat-slide-toggle [(ngModel)]="properties.enableCommandBlock">Enable Command Blocks</mat-slide-toggle><br>
+            <mat-slide-toggle [(ngModel)]="properties.enforceWhitelist">Enforce Whitelist</mat-slide-toggle><br>
+            <mat-slide-toggle [(ngModel)]="properties.forceGamemode">Force Game Mode</mat-slide-toggle><br>
+            <mat-slide-toggle [(ngModel)]="properties.generateStructures">Generate Structures</mat-slide-toggle><br>
+            <mat-slide-toggle [(ngModel)]="properties.hardcore">Hardcore</mat-slide-toggle><br>
+            <mat-slide-toggle [(ngModel)]="properties.onlineMode">Online Mode</mat-slide-toggle><br>
+            <mat-slide-toggle [(ngModel)]="properties.preventProxyConnections">Prevent Proxy Connections</mat-slide-toggle><br>
+            <mat-slide-toggle [(ngModel)]="properties.pvp">Pvp</mat-slide-toggle><br>
+            <mat-slide-toggle [(ngModel)]="properties.snooperEnabled">Snooper Enabled</mat-slide-toggle><br>
+            <mat-slide-toggle [(ngModel)]="properties.spawnAnimals">Spawn Animals</mat-slide-toggle><br>
+            <mat-slide-toggle [(ngModel)]="properties.spawnMonsters">Spawn Monsters</mat-slide-toggle><br>
+            <mat-slide-toggle [(ngModel)]="properties.spawnNpcs">Spawn NPCs</mat-slide-toggle><br>
+            <mat-slide-toggle [(ngModel)]="properties.useNativeTransport">Use Native Transport</mat-slide-toggle><br>
+            <mat-slide-toggle [(ngModel)]="properties.enableQuery">Enable Query</mat-slide-toggle><br>
+            <mat-slide-toggle [(ngModel)]="properties.enableRcon">Enable Rcon</mat-slide-toggle><br>
           </div>
           <div class="col">
             <mat-form-field>
-              <input matInput type="number" placeholder="Server Port" [(value)]="properties.serverPort" />
+              <input matInput type="number" placeholder="Server Port" [(ngModel)]="properties.serverPort" />
             </mat-form-field>
             <br>
             <mat-form-field>
@@ -76,57 +76,57 @@
             </mat-form-field>
             <br>
             <mat-form-field>
-              <input matInput type="number" placeholder="Network Compression Threshold" [(value)]="properties.networkCompressionThreshold" />
+              <input matInput type="number" placeholder="Network Compression Threshold" [(ngModel)]="properties.networkCompressionThreshold" />
             </mat-form-field>
             <br>
             <mat-form-field>
-              <input matInput type="number" placeholder="Player Idle Timeout" [(value)]="properties.playerIdleTimeout" />
+              <input matInput type="number" placeholder="Player Idle Timeout" [(ngModel)]="properties.playerIdleTimeout" />
             </mat-form-field>
             <br>
             <mat-form-field>
-              <input matInput type="number" placeholder="Spawn Protection" [(value)]="properties.spawnProtection" />
+              <input matInput type="number" placeholder="Spawn Protection" [(ngModel)]="properties.spawnProtection" />
             </mat-form-field>
             <br>
             <mat-form-field>
-              <input matInput type="number" placeholder="View Distance" [(value)]="properties.viewDistance" />
+              <input matInput type="number" placeholder="View Distance" [(ngModel)]="properties.viewDistance" />
             </mat-form-field>
             <br>
           </div>
           <div class="col">
             <mat-form-field>
-              <input matInput placeholder="MOTD" [(value)]="properties.motd" />
+              <input matInput placeholder="MOTD" [(ngModel)]="properties.motd" />
             </mat-form-field>
             <br>
             <mat-form-field>
-              <input matInput placeholder="Level Name" [(value)]="properties.levelName" />
+              <input matInput placeholder="Level Name" [(ngModel)]="properties.levelName" />
             </mat-form-field>
             <br>
             <mat-form-field>
-              <input matInput placeholder="Level Seed" [(value)]="properties.levelSeed" />
+              <input matInput placeholder="Level Seed" [(ngModel)]="properties.levelSeed" />
             </mat-form-field>
             <br>
             <mat-form-field>
-              <input matInput placeholder="Generator Settings" [(value)]="properties.generatorSettings" />
+              <input matInput placeholder="Generator Settings" [(ngModel)]="properties.generatorSettings" />
             </mat-form-field>
             <br>
             <mat-form-field>
-              <input matInput placeholder="Resource Pack" [(value)]="properties.resourcePack" />
+              <input matInput placeholder="Resource Pack" [(ngModel)]="properties.resourcePack" />
             </mat-form-field>
             <br>
             <mat-form-field>
-              <input matInput type="number" placeholder="Max Build Height" [(value)]="properties.maxBuildHeight" />
+              <input matInput type="number" placeholder="Max Build Height" [(ngModel)]="properties.maxBuildHeight" />
             </mat-form-field>
             <br>
             <mat-form-field>
-              <input matInput type="number" placeholder="Max Players" [(value)]="properties.maxPlayers" />
+              <input matInput type="number" placeholder="Max Players" [(ngModel)]="properties.maxPlayers" />
             </mat-form-field>
             <br>
             <mat-form-field>
-              <input matInput type="number" placeholder="Max Tick Time" [(value)]="properties.maxTickTime" />
+              <input matInput type="number" placeholder="Max Tick Time" [(ngModel)]="properties.maxTickTime" />
             </mat-form-field>
             <br>
             <mat-form-field>
-              <input matInput type="number" placeholder="Max World Size" [(value)]="properties.maxWorldSize" />
+              <input matInput type="number" placeholder="Max World Size" [(ngModel)]="properties.maxWorldSize" />
             </mat-form-field>
             <br>
           </div>

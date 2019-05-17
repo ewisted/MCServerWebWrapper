@@ -3,7 +3,7 @@
 <ng-template #mainContent>
   <div class="container-fluid">
     <div class="row">
-      <h1>{{currentServer.name}}</h1>
+      <h1 style="margin-left:20px">{{currentServer.name}}</h1>
     </div>
     <div class="row">
       <div class="col-lg">
@@ -15,15 +15,15 @@
         <input class="form-control" id="console-input" type="text" placeholder="Console Input" />
         <div class="row justify-content-between">
           <div class="col-auto mr-auto">
-            <button (click)="sendConsoleInput()" type="submit" class="btn btn-primary">Send Input</button>
+            <button mat-flat-button color="primary" (click)="sendConsoleInput()" type="submit">Send Input</button>
           </div>
           <div class="col-auto">
             <div *ngIf="isRunning; else notRunning">
-              <button (click)="stopServer()" type="button" class="btn btn-danger">Stop Server</button>
+              <button mat-flat-button color="warn" (click)="stopServer()">Stop Server</button>
             </div>
             <ng-template #notRunning>
-              <button (click)="startServer()" type="button" class="btn btn-primary">Start Server</button>
-              <button (click)="removeServer()" type="button" class="btn btn-danger">Remove Server</button>
+              <button mat-flat-button color="primary" (click)="startServer()">Start Server</button>
+              <button mat-flat-button color="warn" (click)="removeServer()">Remove Server</button>
             </ng-template>
           </div>
         </div>
@@ -39,7 +39,11 @@
         </div>
       </div>
       <div class="col-sm">
-        <server-properties [id]="serverId"></server-properties>
+        <mat-tab-group>
+          <mat-tab label="Server Properties"><server-properties [id]="serverId"></server-properties></mat-tab>
+          <mat-tab label="Version Selector"></mat-tab>
+          <mat-tab label="Mods"></mat-tab>
+        </mat-tab-group>
       </div>
     </div>
   </div>

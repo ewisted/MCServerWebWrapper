@@ -117,13 +117,13 @@ namespace MCServerWebWrapper.Server.Models
 			return sb.ToString();
 		}
 
-		public Task Save(string serverPropertiesPath)
+		public async Task Save(string serverPropertiesPath)
 		{
-			var sb = new StringBuilder();
+			var sb = new List<string>();
 			using (var reader = File.OpenText(serverPropertiesPath))
 			{
-				sb.Append(reader.ReadLine());
-				sb.Append(reader.ReadLine());
+				sb.Add(reader.ReadLine());
+				sb.Add(reader.ReadLine());
 				reader.Dispose();
 			}
 			var properties = this.GetType().GetProperties();
@@ -132,11 +132,16 @@ namespace MCServerWebWrapper.Server.Models
 				var value = propertyInfo.GetValue(this, null);
 				if (value != null)
 				{
+					if (value.GetType() == typeof(bool))
+					{
+						value = value.ToString().ToLower();
+					}
 					var line = KeyToPropertiesFormat(propertyInfo.Name) + "=" + value;
-					sb.AppendLine(line);
+					sb.Add(line);
 				}
 			}
-			return Task.CompletedTask;
+			await File.WriteAllLinesAsync(serverPropertiesPath, sb);
+			return;
 		}
 	}
 }

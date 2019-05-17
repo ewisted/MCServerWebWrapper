@@ -1,4 +1,4 @@
-export interface ServerProperties {
+export class ServerProperties {
   allowFlight: boolean;
   allowNether: boolean;
   broadcastConsoleToOps: boolean;
