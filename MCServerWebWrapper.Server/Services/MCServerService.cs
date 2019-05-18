@@ -51,11 +51,13 @@ namespace MCServerWebWrapper.Server.Services
 				Name = name,
 				MaxRamMB = 2048,
 				MinRamMB = 2048,
+				TimesRan = 0,
 			};
 
 			// Build the server path
 			var buildPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 			var serverDirectory = Directory.CreateDirectory(Path.Combine(buildPath, server.Id));
+			server.ServerPath = serverDirectory.FullName;
 
 			// Copy in server jar
 			var serverJarPath = Path.Combine(serverDirectory.FullName, "server.jar");
@@ -71,7 +73,9 @@ namespace MCServerWebWrapper.Server.Services
 			var properties = new ServerProperties();
 			server.Properties = properties as Properties;
 
+			// Add server to database
 			await _repo.AddServer(server);
+
 			return server;
 		}
 
@@ -110,6 +114,7 @@ namespace MCServerWebWrapper.Server.Services
 			server.MinRamMB = minRamMB;
 			server.ProcessId = pId;
 			server.IsRunning = true;
+			server.TimesRan++;
 			await _repo.UpsertServer(server);
 
 			return;
@@ -130,6 +135,33 @@ namespace MCServerWebWrapper.Server.Services
 			dbServer.IsRunning = false;
 			dbServer.ProcessId = null;
 			await _repo.UpsertServer(dbServer);
+
+			return;
+		}
+
+		public async Task SaveServerProperties(string id, ServerProperties properties)
+		{
+			var server = await _repo.GetServerById(id);
+			if (server == null)
+			{
+				throw new Exception("Server not found.");
+			}
+			else if (server.TimesRan == 0)
+			{
+				throw new Exception("You must first run the server to generate neccessary files before saving.");
+			}
+
+			try
+			{
+				server.Properties = properties as Properties;
+				await _repo.UpsertServer(server);
+
+				await properties.Save(Path.Combine(server.ServerPath, "server.properties"));
+			}
+			catch (Exception ex)
+			{
+				throw ex;
+			}
 
 			return;
 		}
