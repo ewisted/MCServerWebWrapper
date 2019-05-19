@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router, ActivatedRoute } from '@angular/router';
 import { HubConnection, HubConnectionBuilder, LogLevel } from '@aspnet/signalr';
 import { MinecraftServer } from '../../models/minecraft-server';
+import { forEach } from '@angular/router/src/utils/collection';
 
 @Component({
   selector: 'app-server',
@@ -31,6 +32,7 @@ export class ServerComponent implements OnInit {
       this.maxRam = this.currentServer.maxRamMB;
       this.minRam = this.currentServer.minRamMB;
       this.outputLines = this.currentServer.latestLogs;
+      this.scrollOutputToBottom();
     }, error => console.error(error));
 
     this._hubConnection = new HubConnectionBuilder()
@@ -43,10 +45,15 @@ export class ServerComponent implements OnInit {
     this._hubConnection.on("outputreceived", (id: string, msg: string) => {
       if (id == this.serverId) {
         this.outputLines.push(msg);
-        var outputEle = document.getElementById("output-list");
-        outputEle.scrollTop = outputEle.scrollHeight;
+        this.scrollOutputToBottom();
       }
     });
+  }
+
+  scrollOutputToBottom() {
+    var outputEle = document.getElementById("output-list");
+    outputEle.scrollTop = outputEle.scrollHeight - outputEle.clientHeight;
+    return;
   }
 
   sendConsoleInput() {
@@ -62,9 +69,11 @@ export class ServerComponent implements OnInit {
   startServer() {
     if (this.minRam > this.maxRam) {
       this.outputLines.push("Min ram cannot exceed max ram.");
+      this.scrollOutputToBottom();
     }
     else {
       this.outputLines.push("Starting Server...");
+      this.scrollOutputToBottom();
       this._http.get(this._baseUrl + `api/MCServer/StartServer?id=${this.serverId}&maxRamMB=${this.maxRam}&minRamMB=${this.minRam}`).subscribe(result => {
         if (result == true) {
           this.isRunning = true;

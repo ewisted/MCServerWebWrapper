@@ -112,8 +112,9 @@ namespace MCServerWebWrapper.Server.Controllers
 
 			var logs = new List<string>();
 			var logPath = Path.Combine(server.ServerPath, "logs", "latest.log");
-			using (var reader = System.IO.File.OpenText(logPath))
-				try
+			try
+			{
+				using (var reader = System.IO.File.OpenText(logPath))
 				{
 					while (!reader.EndOfStream)
 					{
@@ -121,10 +122,11 @@ namespace MCServerWebWrapper.Server.Controllers
 					}
 					serverDTO.LatestLogs = logs;
 				}
-				catch (Exception ex)
-				{
-					return StatusCode(500, ex);
-				}
+			}
+			catch (Exception ex)
+			{
+				return StatusCode(500, ex);
+			}
 
 			return Ok(serverDTO);
 		}
