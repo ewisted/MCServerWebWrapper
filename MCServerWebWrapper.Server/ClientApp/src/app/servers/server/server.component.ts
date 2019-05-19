@@ -30,6 +30,7 @@ export class ServerComponent implements OnInit {
       this.isRunning = this.currentServer.isRunning;
       this.maxRam = this.currentServer.maxRamMB;
       this.minRam = this.currentServer.minRamMB;
+      this.outputLines = this.currentServer.latestLogs;
     }, error => console.error(error));
 
     this._hubConnection = new HubConnectionBuilder()
