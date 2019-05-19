@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -8,7 +9,7 @@ using MCServerWebWrapper.Server.Data;
 using MCServerWebWrapper.Server.Data.Models;
 using MCServerWebWrapper.Server.Models;
 using MCServerWebWrapper.Server.Services;
-using MCServerWebWrapper.Shared.DTOs;
+using MCServerWebWrapper.Models.DTOs;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MCServerWebWrapper.Server.Controllers
@@ -108,6 +109,23 @@ namespace MCServerWebWrapper.Server.Controllers
 		{
 			var server = await _repo.GetServerById(id);
 			var serverDTO = _mapper.Map<MinecraftServerDTO>(server);
+
+			var logs = new List<string>();
+			var logPath = Path.Combine(server.ServerPath, "logs", "latest.log");
+			using (var reader = System.IO.File.OpenText(logPath))
+				try
+				{
+					while (!reader.EndOfStream)
+					{
+						logs.Add(reader.ReadLine());
+					}
+					serverDTO.LatestLogs = logs;
+				}
+				catch (Exception ex)
+				{
+					return StatusCode(500, ex);
+				}
+
 			return Ok(serverDTO);
 		}
 

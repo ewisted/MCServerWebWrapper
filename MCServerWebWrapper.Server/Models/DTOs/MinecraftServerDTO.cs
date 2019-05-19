@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace MCServerWebWrapper.Shared.DTOs
+namespace MCServerWebWrapper.Models.DTOs
 {
 	public class MinecraftServerDTO
 	{
@@ -11,5 +11,6 @@ namespace MCServerWebWrapper.Shared.DTOs
 		public int MaxRamMB { get; set; }
 		public int MinRamMB { get; set; }
 		public bool IsRunning { get; set; }
+		public IEnumerable<string> LatestLogs { get; set; }
 	}
 }
