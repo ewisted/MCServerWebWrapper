@@ -109,24 +109,7 @@ namespace MCServerWebWrapper.Server.Controllers
 		{
 			var server = await _repo.GetServerById(id);
 			var serverDTO = _mapper.Map<MinecraftServerDTO>(server);
-
-			var logs = new List<string>();
-			var logPath = Path.Combine(server.ServerPath, "logs", "latest.log");
-			try
-			{
-				using (var reader = System.IO.File.OpenText(logPath))
-				{
-					while (!reader.EndOfStream)
-					{
-						logs.Add(reader.ReadLine());
-					}
-					serverDTO.LatestLogs = logs;
-				}
-			}
-			catch (Exception ex)
-			{
-				return StatusCode(500, ex);
-			}
+			serverDTO.LatestLogs = (await _serverService.GetCurrentOutput(id)).ToList();
 
 			return Ok(serverDTO);
 		}

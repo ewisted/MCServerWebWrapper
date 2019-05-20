@@ -35,6 +35,21 @@ namespace MCServerWebWrapper.Server.Services
 			_repo = repo;
 		}
 
+		public async Task<IEnumerable<Output>> GetCurrentOutput(string serverId)
+		{
+			var isRunning = _runningServers.TryGetValue(serverId, out var server);
+			IEnumerable<Output> logs;
+			if (!isRunning)
+			{
+				logs = await _repo.GetLogData(serverId, DateTime.UtcNow - TimeSpan.FromDays(1), DateTime.UtcNow);
+			}
+			else
+			{
+				logs = server.Output;
+			}
+			return logs;
+		}
+
 		public async Task<MinecraftServer> NewServer(string name)
 		{
 			var server = await _repo.GetServerByName(name);
@@ -52,6 +67,7 @@ namespace MCServerWebWrapper.Server.Services
 				MaxRamMB = 2048,
 				MinRamMB = 2048,
 				TimesRan = 0,
+				Logs = new List<Output>(),
 			};
 
 			// Build the server path
@@ -134,6 +150,7 @@ namespace MCServerWebWrapper.Server.Services
 			var dbServer = await _repo.GetServerById(id);
 			dbServer.IsRunning = false;
 			dbServer.ProcessId = null;
+			dbServer.Logs.AddRange(server.Output);
 			await _repo.UpsertServer(dbServer);
 
 			return;

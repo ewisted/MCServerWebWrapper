@@ -31,7 +31,9 @@ export class ServerComponent implements OnInit {
       this.isRunning = this.currentServer.isRunning;
       this.maxRam = this.currentServer.maxRamMB;
       this.minRam = this.currentServer.minRamMB;
-      this.outputLines = this.currentServer.latestLogs;
+      this.currentServer.latestLogs.forEach(output => {
+        this.outputLines.push(output.line);
+      });
       this.scrollOutputToBottom();
     }, error => console.error(error));
 

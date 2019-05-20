@@ -36,6 +36,26 @@ namespace MCServerWebWrapper.Server.Data
 			return GetServers().Skip(offset).Take(take);
 		}
 
+		public async Task<IEnumerable<Output>> GetLogData(string id)
+		{
+			var server = await GetServerById(id);
+			return server.Logs;
+		}
+
+		public async Task<IEnumerable<Output>> GetLogData(string id, int offset, int take)
+		{
+			var server = await GetServerById(id);
+			var logs = server.Logs.GetRange(offset, take);
+			return logs;
+		}
+
+		public async Task<IEnumerable<Output>> GetLogData(string id, DateTime from, DateTime to)
+		{
+			var server = await GetServerById(id);
+			var logs = server.Logs.Where(e => e.TimeStamp >= from && e.TimeStamp <= to);
+			return logs;
+		}
+
 		public Task<MinecraftServer> GetServerById(string id)
 		{
 			var server = _servers.AsQueryable().Where(s => s.Id == id).FirstOrDefault();

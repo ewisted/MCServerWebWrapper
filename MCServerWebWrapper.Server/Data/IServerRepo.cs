@@ -10,6 +10,9 @@ namespace MCServerWebWrapper.Server.Data
 	{
 		IQueryable<MinecraftServer> GetServers();
 		IQueryable<MinecraftServer> GetServers(int offset, int take);
+		Task<IEnumerable<Output>> GetLogData(string id);
+		Task<IEnumerable<Output>> GetLogData(string id, int offset, int take);
+		Task<IEnumerable<Output>> GetLogData(string id, DateTime from, DateTime to);
 		Task<MinecraftServer> GetServerById(string id);
 		Task<MinecraftServer> GetServerByName(string name);
 		Task<bool> AddServer(MinecraftServer server);

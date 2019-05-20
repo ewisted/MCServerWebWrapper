@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MCServerWebWrapper.Server.Data.Models;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -11,6 +12,6 @@ namespace MCServerWebWrapper.Models.DTOs
 		public int MaxRamMB { get; set; }
 		public int MinRamMB { get; set; }
 		public bool IsRunning { get; set; }
-		public IEnumerable<string> LatestLogs { get; set; }
+		public List<Output> LatestLogs { get; set; }
 	}
 }

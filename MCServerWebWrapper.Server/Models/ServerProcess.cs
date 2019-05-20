@@ -1,4 +1,5 @@
-﻿using MCServerWebWrapper.Server.Hubs;
+﻿using MCServerWebWrapper.Server.Data.Models;
+using MCServerWebWrapper.Server.Hubs;
 using MCServerWebWrapper.Shared.SignalR;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
@@ -9,6 +10,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MCServerWebWrapper.Server.Models
@@ -21,6 +23,7 @@ namespace MCServerWebWrapper.Server.Models
 		public string ServerId { get; private set; }
 		public int MaxRamMb { get; private set; }
 		public int MinRamMb { get; private set; }
+		public List<Output> Output { get; set; }
 
 		public ServerProcess(string serverId, int maxRam, int minRam)
 		{
@@ -46,8 +49,13 @@ namespace MCServerWebWrapper.Server.Models
 
 		public int StartServer(ILogger logger, IHubContext<AngularHub> angularHub)
 		{
+			Output = new List<Output>();
 			Server.OutputDataReceived += async (sender, args) =>
 			{
+				var output = new Output();
+				output.TimeStamp = DateTime.UtcNow;
+				output.Line = args.Data;
+				Output.Add(output);
 				logger.Log(LogLevel.Information, args.Data);
 				await angularHub.Clients.All.SendAsync(SignalrMethodNames.ServerOutput, ServerId, args.Data);
 			};
@@ -58,11 +66,24 @@ namespace MCServerWebWrapper.Server.Models
 
 		public async Task StopServer()
 		{
-			Server.Exited += (sender, eArgs) =>
-			{
-				Server.Dispose();
-			};
+			var lastOutputBeforeShutdown = Output.Last();
 			await Server.StandardInput.WriteLineAsync("stop");
+
+			// Really shitty, but can't find a better way to wait for the server to stop completely
+			var timeSinceLastOutput = TimeSinceLastOutput();
+			while (timeSinceLastOutput <= TimeSpan.FromSeconds(1) || Output.Last().Line == lastOutputBeforeShutdown.Line)
+			{
+				Thread.Sleep(100);
+				timeSinceLastOutput = TimeSinceLastOutput();
+			}
+			Server.Dispose();
+			return;
+		}
+
+		private TimeSpan TimeSinceLastOutput()
+		{
+			var time = DateTime.UtcNow - Output.Last().TimeStamp;
+			return time;
 		}
 	}
 }

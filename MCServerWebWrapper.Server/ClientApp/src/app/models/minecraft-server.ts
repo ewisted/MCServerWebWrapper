@@ -1,8 +1,13 @@
-export interface MinecraftServer{
+export interface MinecraftServer {
   id: string;
   name: string;
   maxRamMB: number;
   minRamMB: number;
   isRunning: boolean;
-  latestLogs: string[];
+  latestLogs: Output[];
+}
+
+interface Output {
+  timeStamp: Date;
+  line: string;
 }

@@ -28,5 +28,6 @@ namespace MCServerWebWrapper.Server.Data.Models
 		public TimeSpan UpTimeSinceLastRestart { get; set; }
 		public int PercentUpTime { get; set; }
 		public int PlayersConnected { get; set; }
+		public List<Output> Logs { get; set; }
 	}
 }
