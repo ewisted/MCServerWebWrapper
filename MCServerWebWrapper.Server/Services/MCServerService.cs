@@ -15,6 +15,7 @@ using MCServerWebWrapper.Shared.SignalR;
 using System.IO;
 using System.Reflection;
 using AutoMapper;
+using System.Text.RegularExpressions;
 
 namespace MCServerWebWrapper.Server.Services
 {
@@ -37,16 +38,7 @@ namespace MCServerWebWrapper.Server.Services
 
 		public async Task<IEnumerable<Output>> GetCurrentOutput(string serverId)
 		{
-			var isRunning = _runningServers.TryGetValue(serverId, out var server);
-			IEnumerable<Output> logs;
-			if (!isRunning)
-			{
-				logs = await _repo.GetLogData(serverId, DateTime.UtcNow - TimeSpan.FromDays(1), DateTime.UtcNow);
-			}
-			else
-			{
-				logs = server.Output;
-			}
+			var logs = await _repo.GetLogData(serverId, DateTime.UtcNow - TimeSpan.FromHours(2), DateTime.UtcNow);
 			return logs;
 		}
 
@@ -123,6 +115,7 @@ namespace MCServerWebWrapper.Server.Services
 			}
 
 			var serverProcess = new ServerProcess(server.Id, maxRamMB, minRamMB);
+			serverProcess.OutputReceived += s_OutputReceived;
 
 			_runningServers.TryAdd(server.Id, serverProcess);
 			var pId = serverProcess.StartServer(_logger, _angularHub);
@@ -146,11 +139,11 @@ namespace MCServerWebWrapper.Server.Services
 			}
 
 			await server.StopServer();
+			server.OutputReceived -= s_OutputReceived;
 
 			var dbServer = await _repo.GetServerById(id);
 			dbServer.IsRunning = false;
 			dbServer.ProcessId = null;
-			dbServer.Logs.AddRange(server.Output);
 			await _repo.UpsertServer(dbServer);
 
 			return;
@@ -191,6 +184,35 @@ namespace MCServerWebWrapper.Server.Services
 				throw new Exception("Server is not currently running");
 			}
 			await server.Server.StandardInput.WriteLineAsync(msg);
+		}
+
+		private async Task HandleOutput(string serverId, string line)
+		{
+			var output = new Output();
+			output.TimeStamp = DateTime.UtcNow;
+			output.Line = line;
+
+			var rx = new Regex(@"\<(.*?)\>");
+			var match = rx.Match(output.Line);
+			if (!string.IsNullOrWhiteSpace(match.Value))
+			{
+				output.User = match.Value.Trim('<', '>');
+			}
+			else if (line.Contains("UUID of player"))
+			{
+				var userStr = line.Split("UUID of player").Last().Split("is");
+				var user = userStr[0].Trim();
+				var uuid = userStr[1].Trim();
+			}
+			await _repo.AddLogDataByServerId(serverId, output);
+			return;
+		}
+
+		private async void s_OutputReceived(object sender, OutputReceivedEventArgs args)
+		{
+			_logger.Log(LogLevel.Information, args.Data);
+			await _angularHub.Clients.All.SendAsync(SignalrMethodNames.ServerOutput, args.ServerId, args.Data);
+			await HandleOutput(args.ServerId, args.Data);
 		}
 	}
 }

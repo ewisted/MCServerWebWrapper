@@ -10,6 +10,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -23,7 +24,7 @@ namespace MCServerWebWrapper.Server.Models
 		public string ServerId { get; private set; }
 		public int MaxRamMb { get; private set; }
 		public int MinRamMb { get; private set; }
-		public List<Output> Output { get; set; }
+		public event EventHandler<OutputReceivedEventArgs> OutputReceived;
 
 		public ServerProcess(string serverId, int maxRam, int minRam)
 		{
@@ -49,19 +50,23 @@ namespace MCServerWebWrapper.Server.Models
 
 		public int StartServer(ILogger logger, IHubContext<AngularHub> angularHub)
 		{
-			Output = new List<Output>();
-			Server.OutputDataReceived += async (sender, args) =>
+			Server.OutputDataReceived += (sender, args) =>
 			{
-				var output = new Output();
-				output.TimeStamp = DateTime.UtcNow;
-				output.Line = args.Data;
-				Output.Add(output);
-				logger.Log(LogLevel.Information, args.Data);
-				await angularHub.Clients.All.SendAsync(SignalrMethodNames.ServerOutput, ServerId, args.Data);
+				if (args.Data != null)
+				{
+					var eArgs = new OutputReceivedEventArgs();
+					eArgs.Data = args.Data;
+					eArgs.ServerId = ServerId;
+					OnOutputReceived(eArgs);
+				}
 			};
 			Server.Start();
 			Server.BeginOutputReadLine();
 			return Server.Id;
+		}
+		protected virtual void OnOutputReceived(OutputReceivedEventArgs e)
+		{
+			OutputReceived.Invoke(this, e);
 		}
 
 		public async Task StopServer()
@@ -85,5 +90,11 @@ namespace MCServerWebWrapper.Server.Models
 			var time = DateTime.UtcNow - Output.Last().TimeStamp;
 			return time;
 		}
+	}
+
+	public class OutputReceivedEventArgs : EventArgs
+	{
+		public string Data { get; set; }
+		public string ServerId { get; set; }
 	}
 }

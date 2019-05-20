@@ -1,5 +1,6 @@
 ﻿using MCServerWebWrapper.Server.Data.Models;
 using Microsoft.Extensions.Configuration;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
@@ -66,6 +67,14 @@ namespace MCServerWebWrapper.Server.Data
 		{
 			var server = _servers.AsQueryable().Where(s => s.Name == name).FirstOrDefault();
 			return Task.FromResult(server);
+		}
+
+		public async Task AddLogDataByServerId(string id, Output output)
+		{
+			await _servers.FindOneAndUpdateAsync(
+				s => s.Id == id, 
+				Builders<MinecraftServer>.Update.Push(c => c.Logs, output));
+			return;
 		}
 
 		public async Task<bool> AddServer(MinecraftServer server)

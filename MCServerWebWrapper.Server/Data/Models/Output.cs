@@ -9,5 +9,6 @@ namespace MCServerWebWrapper.Server.Data.Models
 	{
 		public DateTime TimeStamp { get; set;}
 		public string Line { get; set; }
+		public string User { get; set; }
 	}
 }
