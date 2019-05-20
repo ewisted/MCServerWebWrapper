@@ -1,0 +1,50 @@
+<p *ngIf="!users; else joinedUsersContent"><em>Loading...</em></p>
+
+<ng-template #joinedUsersContent>
+  <div class="card card-content">
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col">
+          <div class="joined-users">
+            <mat-selection-list #usersList>
+              <mat-list-option *ngFor="let user of joinedUsers" [value]="user">
+                {{user}}
+              </mat-list-option>
+            </mat-selection-list>
+          </div>
+        </div>
+        <div class="col">
+          <div class="joined-users">
+            <table mat-table [dataSource]="users" multiTemplateDataRows class="mat-elevation-z8">
+              <ng-container matColumnDef="{{column}}" *ngFor="let column of columnsToDisplay">
+                <th mat-header-cell *matHeaderCellDef> {{column}} </th>
+                <td mat-cell *matCellDef="let user"> {{user[column]}} </td>
+              </ng-container>
+
+              <!-- Expanded Content Column - The detail row is made up of this one column that spans across all columns -->
+              <ng-container matColumnDef="expandedDetail">
+                <td mat-cell *matCellDef="let user" [attr.colspan]="columnsToDisplay.length">
+                  <div class="user-detail" [@detailExpand]="user == expandedUser ? 'expanded' : 'collapsed'">
+                    <div class="user-expand">
+                      <button mat-flat-button style="margin-right:1em" color="warn" (click)="kick(user)" [(disabled)]="user.connectedServerId != id">Kick User</button>
+                      <button mat-flat-button color="warn" (click)="ban(user)">Ban User</button>
+                    </div>
+                  </div>
+                </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="columnsToDisplay"></tr>
+              <tr mat-row *matRowDef="let user; columns: columnsToDisplay;"
+                  class="user-row"
+                  [class.user-expanded-row]="expandedUser === user"
+                  (click)="expandedUser = expandedUser === user ? null : user"></tr>
+              <tr mat-row *matRowDef="let row; columns: ['expandedDetail']" class="users-detail-row"></tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <button mat-flat-button style="margin-right:1em" color="warn" (click)="kickSet(usersList.selectedOptions.selected)">Kick Users</button>
+  <button mat-flat-button color="warn" (click)="banSet(usersList.selectedOptions.selected)">Ban Users</button>
+</ng-template>

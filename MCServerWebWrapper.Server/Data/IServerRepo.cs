@@ -15,6 +15,7 @@ namespace MCServerWebWrapper.Server.Data
 		Task<IEnumerable<Output>> GetLogData(string id, DateTime from, DateTime to);
 		Task<MinecraftServer> GetServerById(string id);
 		Task<MinecraftServer> GetServerByName(string name);
+		Task AddLogDataByServerId(string id, Output output);
 		Task<bool> AddServer(MinecraftServer server);
 		Task<bool> RemoveServer(string id);
 		Task<bool> UpsertServer(MinecraftServer server);

@@ -9,8 +9,9 @@ using MCServerWebWrapper.Server.Data;
 using MCServerWebWrapper.Server.Data.Models;
 using MCServerWebWrapper.Server.Models;
 using MCServerWebWrapper.Server.Services;
-using MCServerWebWrapper.Models.DTOs;
+using MCServerWebWrapper.Server.Models.DTOs;
 using Microsoft.AspNetCore.Mvc;
+using MCServerWebWrapper.Server.Models.DTOs;
 
 namespace MCServerWebWrapper.Server.Controllers
 {
@@ -20,12 +21,14 @@ namespace MCServerWebWrapper.Server.Controllers
 		private readonly MCServerService _serverService;
 		private readonly IMapper _mapper;
 		private readonly IServerRepo _repo;
+		private readonly IUserRepo _userRepo;
 
-		public MCServerController(MCServerService serverService, IMapper mapper, IServerRepo repo)
+		public MCServerController(MCServerService serverService, IMapper mapper, IServerRepo repo, IUserRepo userRepo)
 		{
 			_serverService = serverService;
 			_mapper = mapper;
 			_repo = repo;
+			_userRepo = userRepo;
 		}
 
 		[HttpPost("[action]")]
@@ -105,6 +108,14 @@ namespace MCServerWebWrapper.Server.Controllers
 		}
 
 		[HttpGet("[action]")]
+		public async Task<IActionResult> GetUsersByServerId([Required] string id)
+		{
+			var dbUsers = (await _userRepo.GetUsersByServerId(id)).ToList(); ;
+			var users = _mapper.Map<List<UserDTO>>(dbUsers);
+			return Ok(users);
+		}
+
+		[HttpGet("[action]")]
 		public async Task<IActionResult> GetServerById([Required] string id)
 		{
 			var server = await _repo.GetServerById(id);
@@ -126,6 +137,26 @@ namespace MCServerWebWrapper.Server.Controllers
 			{
 				return Ok(serverProperties);
 			}
+		}
+
+		[HttpPost("[action]")]
+		public async Task<IActionResult> KickUsers([Required] string serverId, [FromBody] List<string> usernames)
+		{
+			foreach (var username in usernames)
+			{
+				await _serverService.SendConsoleInput(serverId, $"kick {username}");
+			}
+			return Ok();
+		}
+
+		[HttpPost("[action]")]
+		public async Task<IActionResult> BanUsers([Required] string serverId, [FromBody] List<string> usernames)
+		{
+			foreach (var username in usernames)
+			{
+				await _serverService.SendConsoleInput(serverId, $"ban {username}");
+			}
+			return Ok();
 		}
 
 		[HttpGet("[action]")]

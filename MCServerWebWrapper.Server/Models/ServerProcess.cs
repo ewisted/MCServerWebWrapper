@@ -24,6 +24,7 @@ namespace MCServerWebWrapper.Server.Models
 		public string ServerId { get; private set; }
 		public int MaxRamMb { get; private set; }
 		public int MinRamMb { get; private set; }
+		public Output LastOutput { get; set; }
 		public event EventHandler<OutputReceivedEventArgs> OutputReceived;
 
 		public ServerProcess(string serverId, int maxRam, int minRam)
@@ -71,12 +72,12 @@ namespace MCServerWebWrapper.Server.Models
 
 		public async Task StopServer()
 		{
-			var lastOutputBeforeShutdown = Output.Last();
+			var lastOutputBeforeShutdown = LastOutput;
 			await Server.StandardInput.WriteLineAsync("stop");
 
 			// Really shitty, but can't find a better way to wait for the server to stop completely
 			var timeSinceLastOutput = TimeSinceLastOutput();
-			while (timeSinceLastOutput <= TimeSpan.FromSeconds(1) || Output.Last().Line == lastOutputBeforeShutdown.Line)
+			while (timeSinceLastOutput <= TimeSpan.FromSeconds(1) || LastOutput.Line == lastOutputBeforeShutdown.Line)
 			{
 				Thread.Sleep(100);
 				timeSinceLastOutput = TimeSinceLastOutput();
@@ -87,7 +88,7 @@ namespace MCServerWebWrapper.Server.Models
 
 		private TimeSpan TimeSinceLastOutput()
 		{
-			var time = DateTime.UtcNow - Output.Last().TimeStamp;
+			var time = DateTime.UtcNow - LastOutput.TimeStamp;
 			return time;
 		}
 	}

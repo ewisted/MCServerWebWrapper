@@ -28,12 +28,14 @@ namespace MCServerWebWrapper.Server.Services
 		private static readonly ConcurrentDictionary<string, ServerProcess> _runningServers = 
 			new ConcurrentDictionary<string, ServerProcess>();
 		private readonly IServerRepo _repo;
+		private readonly IUserRepo _userRepo;
 
-		public MCServerService(IHubContext<AngularHub> angularHub, ILogger<MCServerService> logger, IServerRepo repo)
+		public MCServerService(IHubContext<AngularHub> angularHub, ILogger<MCServerService> logger, IServerRepo repo, IUserRepo userRepo)
 		{
 			_angularHub = angularHub;
 			_logger = logger;
 			_repo = repo;
+			_userRepo = userRepo;
 		}
 
 		public async Task<IEnumerable<Output>> GetCurrentOutput(string serverId)
@@ -125,13 +127,14 @@ namespace MCServerWebWrapper.Server.Services
 			server.IsRunning = true;
 			server.TimesRan++;
 			await _repo.UpsertServer(server);
+			await _angularHub.Clients.All.SendAsync(SignalrMethodNames.ServerStarted, id);
 
 			return;
 		}
 
 		public async Task StopServerById(string id)
 		{
-			_runningServers.TryRemove(id, out var server);
+			_runningServers.TryGetValue(id, out var server);
 			if (server == null)
 			{
 				// TODO: Add error handling here
@@ -140,11 +143,13 @@ namespace MCServerWebWrapper.Server.Services
 
 			await server.StopServer();
 			server.OutputReceived -= s_OutputReceived;
+			_runningServers.TryRemove(id, out server);
 
 			var dbServer = await _repo.GetServerById(id);
 			dbServer.IsRunning = false;
 			dbServer.ProcessId = null;
 			await _repo.UpsertServer(dbServer);
+			await _angularHub.Clients.All.SendAsync(SignalrMethodNames.ServerStopped, id);
 
 			return;
 		}
@@ -192,18 +197,55 @@ namespace MCServerWebWrapper.Server.Services
 			output.TimeStamp = DateTime.UtcNow;
 			output.Line = line;
 
-			var rx = new Regex(@"\<(.*?)\>");
-			var match = rx.Match(output.Line);
-			if (!string.IsNullOrWhiteSpace(match.Value))
-			{
-				output.User = match.Value.Trim('<', '>');
-			}
-			else if (line.Contains("UUID of player"))
+			_runningServers.TryGetValue(serverId, out var server);
+			server.LastOutput = output;
+			_runningServers.AddOrUpdate(serverId, server, (key, value) => value = server);
+
+			if (line.Contains("UUID of player"))
 			{
 				var userStr = line.Split("UUID of player").Last().Split("is");
-				var user = userStr[0].Trim();
-				var uuid = userStr[1].Trim();
+				var user = new User();
+				user.ConnectedServerId = serverId;
+				user.UUID = userStr[1].Trim();
+				user.Username = userStr[0].Trim();
+				await _userRepo.UpsertUser(user);
+				await _repo.AddLogDataByServerId(serverId, output);
+				return;
 			}
+
+			if (line.Contains("left the game"))
+			{
+				var username = line.Split(':').Last().Replace("left the game", "");
+				var user = new User();
+				user.Username = username.Trim();
+				user.ConnectedServerId = "";
+				await _angularHub.Clients.All.SendAsync(SignalrMethodNames.UserLeft, serverId, user.Username);
+				await _userRepo.UpsertUser(user);
+				await _repo.AddLogDataByServerId(serverId, output);
+				return;
+			}
+
+			var userMessageTest = new Regex(@"\<(.*?)\>");
+			var userMessageMatch = userMessageTest.Match(output.Line);
+			if (!string.IsNullOrWhiteSpace(userMessageMatch.Value))
+			{
+				output.User = userMessageMatch.Value.Trim('<', '>');
+				await _repo.AddLogDataByServerId(serverId, output);
+				return;
+			}
+
+			var userConnectedTest = new Regex(@"(?=.*?)([A-Za-z0-9]+)\[\/(.*?)\]");
+			var userConnectedMatch = userConnectedTest.Match(output.Line);
+			if (!string.IsNullOrWhiteSpace(userConnectedMatch.Value))
+			{
+				output.User = userConnectedMatch.Groups[1].Value;
+				var user = new User();
+				user.Username = output.User;
+				user.IP = userConnectedMatch.Groups[2].Value.Split(':').FirstOrDefault();
+				await _angularHub.Clients.All.SendAsync(SignalrMethodNames.UserJoined, serverId, user.Username);
+				await _userRepo.UpsertUser(user);
+			}
+
 			await _repo.AddLogDataByServerId(serverId, output);
 			return;
 		}

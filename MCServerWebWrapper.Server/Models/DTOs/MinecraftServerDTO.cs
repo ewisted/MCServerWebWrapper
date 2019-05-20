@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace MCServerWebWrapper.Models.DTOs
+namespace MCServerWebWrapper.Server.Models.DTOs
 {
 	public class MinecraftServerDTO
 	{

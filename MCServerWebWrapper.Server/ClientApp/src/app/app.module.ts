@@ -14,6 +14,7 @@ import { MainMaterialModule } from './main-material-module';
 import { ServersComponent } from './servers/servers.component';
 import { ServerComponent } from './servers/server/server.component';
 import { PropertiesComponent } from './servers/server/properties/properties.component';
+import { UsersComponent } from './servers/server/users/users.component';
 
 @NgModule({
   declarations: [
@@ -24,6 +25,7 @@ import { PropertiesComponent } from './servers/server/properties/properties.comp
     ServersComponent,
     ServerComponent,
     PropertiesComponent,
+    UsersComponent,
     FetchDataComponent
   ],
   imports: [

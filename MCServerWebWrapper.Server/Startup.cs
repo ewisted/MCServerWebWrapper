@@ -29,6 +29,7 @@ namespace MCServerWebWrapper
 			services.AddSignalR();
 			services.AddSingleton<MCServerService>();
 			services.AddTransient<IServerRepo, ServerMongoRepo>();
+			services.AddTransient<IUserRepo, UserMongoRepo>();
 			services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
 			// In production, the Angular files will be served from this directory

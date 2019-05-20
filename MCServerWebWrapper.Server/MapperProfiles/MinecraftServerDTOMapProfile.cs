@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using MCServerWebWrapper.Models.DTOs;
+using MCServerWebWrapper.Server.Models.DTOs;
 using MCServerWebWrapper.Server.Data.Models;
 using System;
 using System.Collections.Generic;

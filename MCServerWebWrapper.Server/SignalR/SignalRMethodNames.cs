@@ -8,6 +8,9 @@ namespace MCServerWebWrapper.Shared.SignalR
 	{
 		public const string Ping = "ping";
 		public const string ServerOutput = "outputreceived";
-		public const string ServerError = "errorreceived";
+		public const string ServerStarted = "serverstarted";
+		public const string ServerStopped = "serverstopped";
+		public const string UserJoined = "userjoined";
+		public const string UserLeft = "userleft";
 	}
 }
