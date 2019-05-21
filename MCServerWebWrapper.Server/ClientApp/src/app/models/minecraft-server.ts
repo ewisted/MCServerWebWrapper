@@ -4,6 +4,11 @@ export interface MinecraftServer {
   maxRamMB: number;
   minRamMB: number;
   isRunning: boolean;
+  timesRan: number;
+  dateCreated: Date;
+  dateLastStarted: Date;
+  dateLastStopped: Date;
+  totalUpTimeSeconds: number;
   latestLogs: Output[];
 }
 

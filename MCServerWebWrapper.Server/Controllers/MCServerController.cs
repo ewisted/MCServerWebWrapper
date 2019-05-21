@@ -120,7 +120,6 @@ namespace MCServerWebWrapper.Server.Controllers
 		{
 			var server = await _repo.GetServerById(id);
 			var serverDTO = _mapper.Map<MinecraftServerDTO>(server);
-			serverDTO.LatestLogs = (await _serverService.GetCurrentOutput(id)).ToList();
 
 			return Ok(serverDTO);
 		}

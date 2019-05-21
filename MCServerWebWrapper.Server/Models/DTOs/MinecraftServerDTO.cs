@@ -12,6 +12,11 @@ namespace MCServerWebWrapper.Server.Models.DTOs
 		public int MaxRamMB { get; set; }
 		public int MinRamMB { get; set; }
 		public bool IsRunning { get; set; }
+		public int TimesRan { get; set; }
+		public DateTime DateCreated { get; set; }
+		public DateTime DateLastStarted { get; set; }
+		public DateTime DateLastStopped { get; set; }
+		public double TotalUpTimeSeconds { get; set; }
 		public List<Output> LatestLogs { get; set; }
 	}
 }

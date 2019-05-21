@@ -62,6 +62,7 @@ namespace MCServerWebWrapper.Server.Services
 				MinRamMB = 2048,
 				TimesRan = 0,
 				Logs = new List<Output>(),
+				TotalUpTime = TimeSpan.Zero,
 			};
 
 			// Build the server path
@@ -126,6 +127,7 @@ namespace MCServerWebWrapper.Server.Services
 			server.ProcessId = pId;
 			server.IsRunning = true;
 			server.TimesRan++;
+			server.DateLastStarted = DateTime.UtcNow;
 			await _repo.UpsertServer(server);
 			await _angularHub.Clients.All.SendAsync(SignalrMethodNames.ServerStarted, id);
 
@@ -148,6 +150,8 @@ namespace MCServerWebWrapper.Server.Services
 			var dbServer = await _repo.GetServerById(id);
 			dbServer.IsRunning = false;
 			dbServer.ProcessId = null;
+			dbServer.DateLastStopped = DateTime.UtcNow;
+			dbServer.TotalUpTime = dbServer.TotalUpTime + (DateTime.UtcNow - dbServer.DateLastStarted);
 			await _repo.UpsertServer(dbServer);
 			await _angularHub.Clients.All.SendAsync(SignalrMethodNames.ServerStopped, id);
 

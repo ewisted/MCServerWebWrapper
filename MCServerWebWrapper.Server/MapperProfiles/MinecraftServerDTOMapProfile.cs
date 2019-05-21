@@ -12,7 +12,13 @@ namespace MCServerWebWrapper.Server.MapperProfiles
 	{
 		public MinecraftServerDTOMapProfile()
 		{
-			CreateMap<MinecraftServer, MinecraftServerDTO>().ForMember(x => x.LatestLogs, opt => opt.Ignore());
+			CreateMap<MinecraftServer, MinecraftServerDTO>()
+				.ForMember(x => 
+					x.LatestLogs,
+					opt => opt.MapFrom(m => m.Logs.TakeLast(200).ToList()))
+				.ForMember(x => 
+					x.TotalUpTimeSeconds, 
+					opt => opt.MapFrom(m => m.TotalUpTime.TotalSeconds));
 		}
 	}
 }
