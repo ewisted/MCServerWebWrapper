@@ -63,6 +63,7 @@ namespace MCServerWebWrapper.Server.Services
 				TimesRan = 0,
 				Logs = new List<Output>(),
 				TotalUpTime = TimeSpan.Zero,
+				PlayerCountChanges = new List<PlayerCountChange>(),
 			};
 
 			// Build the server path
@@ -225,6 +226,15 @@ namespace MCServerWebWrapper.Server.Services
 				user.ConnectedServerId = "";
 				await _angularHub.Clients.All.SendAsync(SignalrMethodNames.UserLeft, serverId, user.Username);
 				await _userRepo.UpsertUser(user);
+				var dbServer = await _repo.GetServerById(serverId);
+				var change = new PlayerCountChange()
+				{
+					Timestamp = DateTime.UtcNow,
+					PlayersCurrentlyConnected = dbServer.PlayersCurrentlyConnected - 1,
+					TriggeredByUsername = user.Username,
+					IsJoin = false,
+				};
+				await _repo.AddPlayerCountDataByServerId(serverId, change);
 				await _repo.AddLogDataByServerId(serverId, output);
 				return;
 			}
@@ -242,12 +252,22 @@ namespace MCServerWebWrapper.Server.Services
 			var userConnectedMatch = userConnectedTest.Match(output.Line);
 			if (!string.IsNullOrWhiteSpace(userConnectedMatch.Value))
 			{
+				await _angularHub.Clients.All.SendAsync(SignalrMethodNames.UserJoined, serverId, userConnectedMatch.Groups[1].Value);
 				output.User = userConnectedMatch.Groups[1].Value;
 				var user = new User();
 				user.Username = output.User;
 				user.IP = userConnectedMatch.Groups[2].Value.Split(':').FirstOrDefault();
-				await _angularHub.Clients.All.SendAsync(SignalrMethodNames.UserJoined, serverId, user.Username);
 				await _userRepo.UpsertUser(user);
+
+				var dbServer = await _repo.GetServerById(serverId);
+				var change = new PlayerCountChange()
+				{
+					Timestamp = DateTime.UtcNow,
+					PlayersCurrentlyConnected = dbServer.PlayersCurrentlyConnected + 1,
+					TriggeredByUsername = user.Username,
+					IsJoin = true,
+				};
+				await _repo.AddPlayerCountDataByServerId(serverId, change);
 			}
 
 			await _repo.AddLogDataByServerId(serverId, output);

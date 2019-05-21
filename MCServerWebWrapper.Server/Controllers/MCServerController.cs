@@ -120,7 +120,12 @@ namespace MCServerWebWrapper.Server.Controllers
 		{
 			var server = await _repo.GetServerById(id);
 			var serverDTO = _mapper.Map<MinecraftServerDTO>(server);
-
+			var lifetime = DateTime.UtcNow - serverDTO.DateCreated;
+			if (server.IsRunning)
+			{
+				server.TotalUpTime = server.TotalUpTime + (DateTime.UtcNow - server.DateLastStarted);
+			}
+			serverDTO.PercentUpTime = Convert.ToInt32((server.TotalUpTime / lifetime) * 100);
 			return Ok(serverDTO);
 		}
 

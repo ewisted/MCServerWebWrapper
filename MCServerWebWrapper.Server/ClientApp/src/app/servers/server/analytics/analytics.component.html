@@ -1,0 +1,29 @@
+<mat-card>
+  <mat-card-content>
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col">
+          <circle-progress [percent]="percentUpTime"
+                           [radius]="100"
+                           [outerStrokeWidth]="16"
+                           [innerStrokeWidth]="8"
+                           [outerStrokeColor]="'#78C000'"
+                           [innerStrokeColor]="'#C7E596'"
+                           [animation]="true"
+                           [animationDuration]="300"></circle-progress>
+        </div>
+        <div class="col">
+          <!--Scrolling line graph for player count here-->
+        </div>
+      </div>
+      <div class="row">
+        <div class="col">
+          <!--Second circle percent chart for downtime here-->
+        </div>
+        <div class="col">
+
+        </div>
+      </div>
+    </div>
+  </mat-card-content>
+</mat-card>

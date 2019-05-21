@@ -13,10 +13,12 @@ namespace MCServerWebWrapper.Server.Models.DTOs
 		public int MinRamMB { get; set; }
 		public bool IsRunning { get; set; }
 		public int TimesRan { get; set; }
+		public int PlayersCurrentlyConnected { get; set; }
+		public List<PlayerCountChange> PlayerCountChanges { get; set; }
 		public DateTime DateCreated { get; set; }
 		public DateTime DateLastStarted { get; set; }
 		public DateTime DateLastStopped { get; set; }
-		public double TotalUpTimeSeconds { get; set; }
+		public int PercentUpTime { get; set; }
 		public List<Output> LatestLogs { get; set; }
 	}
 }

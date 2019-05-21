@@ -6,7 +6,7 @@ import { User } from '../../../models/user';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 
 @Component({
-  selector: 'users',
+  selector: 'server-users',
   templateUrl: './users.component.html',
   styleUrls: ['./users.component.css'],
   animations: [

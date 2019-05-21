@@ -73,7 +73,19 @@ namespace MCServerWebWrapper.Server.Data
 		{
 			await _servers.FindOneAndUpdateAsync(
 				s => s.Id == id, 
-				Builders<MinecraftServer>.Update.Push(c => c.Logs, output));
+				Builders<MinecraftServer>.Update.Push(
+					c => c.Logs,
+					output));
+			return;
+		}
+
+		public async Task AddPlayerCountDataByServerId(string id, PlayerCountChange change)
+		{
+			await _servers.FindOneAndUpdateAsync(
+				s => s.Id == id,
+				Builders<MinecraftServer>.Update.Push(
+					c => c.PlayerCountChanges,
+					change));
 			return;
 		}
 

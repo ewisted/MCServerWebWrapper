@@ -17,8 +17,12 @@ namespace MCServerWebWrapper.Server.MapperProfiles
 					x.LatestLogs,
 					opt => opt.MapFrom(m => m.Logs.TakeLast(200).ToList()))
 				.ForMember(x => 
-					x.TotalUpTimeSeconds, 
-					opt => opt.MapFrom(m => m.TotalUpTime.TotalSeconds));
+					x.PercentUpTime, 
+					//opt => opt.MapFrom(m => Convert.ToInt32(((m.IsRunning ? m.TotalUpTime + (DateTime.UtcNow - m.DateLastStarted) : m.TotalUpTime) / (DateTime.UtcNow - m.DateCreated)) * 100)))
+					opt => opt.Ignore())
+				.ForMember(x =>
+					x.PlayerCountChanges,
+					opt => opt.MapFrom(m => m.PlayerCountChanges.TakeLast(200).ToList()));
 		}
 	}
 }

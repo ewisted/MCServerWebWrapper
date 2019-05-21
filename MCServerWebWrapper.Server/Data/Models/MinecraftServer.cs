@@ -15,6 +15,8 @@ namespace MCServerWebWrapper.Server.Data.Models
 		public string Name { get; set; }
 		public bool IsRunning { get; set; }
 		public int TimesRan { get; set; }
+		public int PlayersCurrentlyConnected { get; set; }
+		public List<PlayerCountChange> PlayerCountChanges { get; set; }
 		public int? ProcessId { get; set; }
 		public int MaxRamMB { get; set; }
 		public int MinRamMB { get; set; }
