@@ -120,9 +120,11 @@ namespace MCServerWebWrapper.Server.Services
 
 			var serverProcess = new ServerProcess(server.Id, maxRamMB, minRamMB);
 			serverProcess.OutputReceived += s_OutputReceived;
+			serverProcess.StatusUpdated += s_StatusUpdated;
 
+			var pId = serverProcess.StartServer();
 			_runningServers.TryAdd(server.Id, serverProcess);
-			var pId = serverProcess.StartServer(_logger, _angularHub);
+
 			server.MaxRamMB = maxRamMB;
 			server.MinRamMB = minRamMB;
 			server.ProcessId = pId;
@@ -146,6 +148,7 @@ namespace MCServerWebWrapper.Server.Services
 
 			await server.StopServer();
 			server.OutputReceived -= s_OutputReceived;
+			server.StatusUpdated -= s_StatusUpdated;
 			_runningServers.TryRemove(id, out server);
 
 			var dbServer = await _repo.GetServerById(id);
@@ -279,6 +282,11 @@ namespace MCServerWebWrapper.Server.Services
 			_logger.Log(LogLevel.Information, args.Data);
 			await _angularHub.Clients.All.SendAsync(SignalrMethodNames.ServerOutput, args.ServerId, args.Data);
 			await HandleOutput(args.ServerId, args.Data);
+		}
+
+		private async void s_StatusUpdated(object sender, StatusUpdatedEventArgs args)
+		{
+			await _angularHub.Clients.All.SendAsync(SignalrMethodNames.StatusUpdate, args.ServerId, args.StatusUpdate);
 		}
 	}
 }

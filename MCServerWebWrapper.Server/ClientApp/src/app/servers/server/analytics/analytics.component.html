@@ -14,6 +14,13 @@
         </div>
         <div class="col">
           <!--Scrolling line graph for player count here-->
+          <div class="status-chart">
+            <svg height="200" width="413">
+              <polyline [attr.points]="cpuPointsString"
+                        style="fill:none;stroke:cornflowerblue;stroke-width:1"
+                        transform="translate(420,0) scale(-1, 1)"/>
+            </svg>
+          </div>
         </div>
       </div>
       <div class="row">

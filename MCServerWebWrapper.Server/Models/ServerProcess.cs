@@ -1,5 +1,6 @@
 ﻿using MCServerWebWrapper.Server.Data.Models;
 using MCServerWebWrapper.Server.Hubs;
+using MCServerWebWrapper.Server.SignalR;
 using MCServerWebWrapper.Shared.SignalR;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
@@ -26,6 +27,10 @@ namespace MCServerWebWrapper.Server.Models
 		public int MinRamMb { get; private set; }
 		public Output LastOutput { get; set; }
 		public event EventHandler<OutputReceivedEventArgs> OutputReceived;
+		private System.Timers.Timer _timer;
+		private DateTime LastUpdateTimestamp;
+		private TimeSpan LastCpuUsage;
+		public event EventHandler<StatusUpdatedEventArgs> StatusUpdated;
 
 		public ServerProcess(string serverId, int maxRam, int minRam)
 		{
@@ -49,25 +54,52 @@ namespace MCServerWebWrapper.Server.Models
 			Server.EnableRaisingEvents = true;
 		}
 
-		public int StartServer(ILogger logger, IHubContext<AngularHub> angularHub)
+		public int StartServer()
 		{
-			Server.OutputDataReceived += (sender, args) =>
-			{
-				if (args.Data != null)
-				{
-					var eArgs = new OutputReceivedEventArgs();
-					eArgs.Data = args.Data;
-					eArgs.ServerId = ServerId;
-					OnOutputReceived(eArgs);
-				}
-			};
+			Server.OutputDataReceived += OnOutputReceived;
 			Server.Start();
 			Server.BeginOutputReadLine();
+			LastUpdateTimestamp = DateTime.UtcNow;
+			LastCpuUsage = Server.TotalProcessorTime;
+			Task.Run(async () =>
+			{
+				await Task.Delay(1000);
+				_timer = new System.Timers.Timer(1000);
+				_timer.Elapsed += OnStatusUpdated;
+				_timer.Enabled = true;
+			});
+			
 			return Server.Id;
 		}
-		protected virtual void OnOutputReceived(OutputReceivedEventArgs e)
+		private void OnOutputReceived(object sender, DataReceivedEventArgs args)
 		{
-			OutputReceived.Invoke(this, e);
+			if (args.Data != null)
+			{
+				var eArgs = new OutputReceivedEventArgs();
+				eArgs.Data = args.Data;
+				eArgs.ServerId = ServerId;
+				OutputReceived.Invoke(this, eArgs);
+			}
+		}
+
+		private void OnStatusUpdated(object sender, System.Timers.ElapsedEventArgs e)
+		{
+			var updateTimeStamp = DateTime.UtcNow;
+			var cpuUsage = Server.TotalProcessorTime;
+			var cpuUsedMs = (cpuUsage - LastCpuUsage).TotalMilliseconds;
+			var totalMsPassed = (updateTimeStamp - LastUpdateTimestamp).TotalMilliseconds;
+			var cpuUsageTotal = cpuUsedMs / (Environment.ProcessorCount * totalMsPassed);
+
+			var update = new StatusUpdate()
+			{
+				CpuUsuagePercent = Convert.ToInt32(cpuUsageTotal * 100),
+				RamUsageMB = Convert.ToInt32(Server.WorkingSet64 / 1000000),
+			};
+			
+			StatusUpdated.Invoke(this, new StatusUpdatedEventArgs(ServerId, update));
+
+			LastUpdateTimestamp = updateTimeStamp;
+			LastCpuUsage = cpuUsage;
 		}
 
 		public async Task StopServer()
@@ -82,6 +114,10 @@ namespace MCServerWebWrapper.Server.Models
 				Thread.Sleep(100);
 				timeSinceLastOutput = TimeSinceLastOutput();
 			}
+			Server.OutputDataReceived += OnOutputReceived;
+			_timer.Elapsed += OnStatusUpdated;
+			_timer.Enabled = false;
+			_timer = null;
 			Server.Dispose();
 			return;
 		}
@@ -97,5 +133,16 @@ namespace MCServerWebWrapper.Server.Models
 	{
 		public string Data { get; set; }
 		public string ServerId { get; set; }
+	}
+
+	public class StatusUpdatedEventArgs : EventArgs
+	{
+		public StatusUpdatedEventArgs(string serverId, StatusUpdate update)
+		{
+			ServerId = serverId;
+			StatusUpdate = update;
+		}
+		public string ServerId { get; set; }
+		public StatusUpdate StatusUpdate { get; set; } 
 	}
 }
