@@ -1,34 +1,51 @@
 <mat-card>
   <mat-card-content>
     <div class="container-fluid">
-      <div class="row">
-        <div class="col">
+      <div class="row justify-content-between">
+        <div class="col-auto mr-auto">
           <circle-progress [percent]="percentUpTime"
-                           [radius]="100"
-                           [outerStrokeWidth]="16"
-                           [innerStrokeWidth]="8"
-                           [outerStrokeColor]="'#78C000'"
-                           [innerStrokeColor]="'#C7E596'"
-                           [animation]="true"
-                           [animationDuration]="300"></circle-progress>
+                           radius="75"
+                           space="-10"
+                           outerStrokeGradient="true"
+                           outerStrokeWidth="10"
+                           innerStrokeWidth="10"
+                           outerStrokeColor="#4882c2"
+                           outerStrokeGradientStopColor="#53a9ff"
+                           innerStrokeColor="#e7e8ea"
+                           animation="true"
+                           animationDuration="300"
+                           title="Up Time"
+                           [subtitle]="percentUpTime + '%'"
+                           titleFontSize="24"
+                           subtitleFontSize="12"
+                           animateTitle="true"></circle-progress>
         </div>
-        <div class="col">
+        <div class="col-auto">
           <!--Scrolling line graph for player count here-->
-          <div class="status-chart">
+          <h3>CPU</h3>
+          <div class="status-chart cpu">
             <svg height="200" width="413">
               <polyline [attr.points]="cpuPointsString"
                         style="fill:none;stroke:cornflowerblue;stroke-width:1"
-                        transform="translate(420,0) scale(-1, 1)"/>
+                        transform="translate(420,0) scale(-1, 1)" />
             </svg>
           </div>
         </div>
       </div>
-      <div class="row">
-        <div class="col">
+      <br />
+      <div class="row justify-content-between">
+        <div class="col-auto mr-auto">
           <!--Second circle percent chart for downtime here-->
         </div>
-        <div class="col">
-
+        <div class="col-auto">
+          <h3>Memory</h3>
+          <div class="status-chart ram">
+            <svg height="200" width="413">
+              <polyline [attr.points]="ramPointsString"
+                        style="fill:none;stroke:mediumorchid;stroke-width:1"
+                        transform="translate(420,0) scale(-1, 1)" />
+            </svg>
+          </div>
         </div>
       </div>
     </div>

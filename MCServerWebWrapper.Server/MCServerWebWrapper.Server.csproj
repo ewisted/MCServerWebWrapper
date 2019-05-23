@@ -42,7 +42,6 @@
 
   <ItemGroup>
     <None Remove="ClientApp\src\app\main-material-module.ts" />
-    <None Remove="ClientApp\src\app\models\cpu-data.ts" />
     <None Remove="ClientApp\src\app\models\minecraft-server.ts" />
     <None Remove="ClientApp\src\app\models\server-properties.ts" />
     <None Remove="ClientApp\src\app\models\status-update.ts" />
@@ -52,9 +51,6 @@
 
   <ItemGroup>
     <TypeScriptCompile Include="ClientApp\src\app\main-material-module.ts">
-      <SubType>Code</SubType>
-    </TypeScriptCompile>
-    <TypeScriptCompile Include="ClientApp\src\app\models\cpu-data.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
     <TypeScriptCompile Include="ClientApp\src\app\models\minecraft-server.ts">

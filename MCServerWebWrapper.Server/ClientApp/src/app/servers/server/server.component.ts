@@ -4,6 +4,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { HubConnection, HubConnectionBuilder, LogLevel } from '@aspnet/signalr';
 import { MinecraftServer } from '../../models/minecraft-server';
 import { forEach } from '@angular/router/src/utils/collection';
+import { StatusUpdate } from '../../models/status-update';
 
 @Component({
   selector: 'app-server',
@@ -18,6 +19,8 @@ export class ServerComponent implements OnInit {
   public minRam: number;
   public outputLines: string[] = [];
   public isRunning: boolean;
+  cpuPointsString: string = "";
+  ramPointsString: string = "";
 
   constructor(private _http: HttpClient, @Inject('BASE_URL') private _baseUrl: string, private _router: Router, private _route: ActivatedRoute) {
     this._route.params.subscribe(params => {
@@ -50,6 +53,26 @@ export class ServerComponent implements OnInit {
         this.scrollOutputToBottom();
       }
     });
+
+    this._hubConnection.on("statusupdate", (id: string, update: StatusUpdate) => {
+      if (id == this.serverId) {
+        this.cpuPointsString = update.cpuUsageString;
+        this.ramPointsString = update.ramUsageString;
+        console.log(this.ramPointsString);
+      }
+    });
+
+    this._hubConnection.on("serverstarted", (id: string) => {
+      if (this.serverId == id) {
+        this.isRunning = true;
+      }
+    });
+
+    this._hubConnection.on("serverstopped", (id: string) => {
+      if (this.serverId == id) {
+        this.isRunning = false;
+      }
+    });
   }
 
   scrollOutputToBottom() {
@@ -76,21 +99,12 @@ export class ServerComponent implements OnInit {
     else {
       this.outputLines.push("Starting Server...");
       this.scrollOutputToBottom();
-      this._http.get(this._baseUrl + `api/MCServer/StartServer?id=${this.serverId}&maxRamMB=${this.maxRam}&minRamMB=${this.minRam}`).subscribe(result => {
-        if (result == true) {
-          this.isRunning = true;
-        }
-        else {
-          console.error(result.toString())
-        }
-      }, error => console.error(error));
+      this._http.get(this._baseUrl + `api/MCServer/StartServer?id=${this.serverId}&maxRamMB=${this.maxRam}&minRamMB=${this.minRam}`).subscribe(error => console.error(error));
     }
   }
 
   stopServer() {
-    this._http.get(this._baseUrl + `api/MCServer/StopServer?id=${this.serverId}`).subscribe(() => {
-      this.isRunning = false;
-    }, error => console.error(error));
+    this._http.get(this._baseUrl + `api/MCServer/StopServer?id=${this.serverId}`).subscribe(error => console.error(error));
   }
 
   removeServer() {

@@ -25,12 +25,21 @@ namespace MCServerWebWrapper.Server.Models
 		public string ServerId { get; private set; }
 		public int MaxRamMb { get; private set; }
 		public int MinRamMb { get; private set; }
+		public bool IsRunning { get; private set; }
+		public CpuData CpuData { get; private set; }
+		public RamData RamData { get; private set; }
+
 		public Output LastOutput { get; set; }
 		public event EventHandler<OutputReceivedEventArgs> OutputReceived;
+		public event EventHandler<StatusUpdatedEventArgs> StatusUpdated;
 		private System.Timers.Timer _timer;
 		private DateTime LastUpdateTimestamp;
 		private TimeSpan LastCpuUsage;
-		public event EventHandler<StatusUpdatedEventArgs> StatusUpdated;
+
+		private static readonly SemaphoreSlim ServerIOSemaphore = new SemaphoreSlim(1, 1);
+		public event EventHandler ServerStarted;
+		public event EventHandler ServerStopped;
+		
 
 		public ServerProcess(string serverId, int maxRam, int minRam)
 		{
@@ -54,52 +63,84 @@ namespace MCServerWebWrapper.Server.Models
 			Server.EnableRaisingEvents = true;
 		}
 
-		public int StartServer()
+		public bool StartServer()
 		{
-			Server.OutputDataReceived += OnOutputReceived;
-			Server.Start();
-			Server.BeginOutputReadLine();
-			LastUpdateTimestamp = DateTime.UtcNow;
-			LastCpuUsage = Server.TotalProcessorTime;
-			Task.Run(async () =>
+			try
 			{
-				await Task.Delay(1000);
-				_timer = new System.Timers.Timer(1000);
-				_timer.Elapsed += OnStatusUpdated;
-				_timer.Enabled = true;
-			});
-			
-			return Server.Id;
+				CpuData = new CpuData();
+				RamData = new RamData(MaxRamMb);
+				Server.OutputDataReceived += OnOutputReceived;
+				Server.Start();
+				Server.BeginOutputReadLine();
+				LastUpdateTimestamp = DateTime.UtcNow;
+				LastCpuUsage = Server.TotalProcessorTime;
+				Task.Run(async () =>
+				{
+					await Task.Delay(1000);
+					_timer = new System.Timers.Timer(1000);
+					_timer.Elapsed += OnStatusUpdated;
+					_timer.Enabled = true;
+				});
+				return true;
+			}
+			catch (Exception ex)
+			{
+				return false;
+			}
 		}
 		private void OnOutputReceived(object sender, DataReceivedEventArgs args)
 		{
 			if (args.Data != null)
 			{
-				var eArgs = new OutputReceivedEventArgs();
-				eArgs.Data = args.Data;
-				eArgs.ServerId = ServerId;
-				OutputReceived.Invoke(this, eArgs);
+				var eArgs = new OutputReceivedEventArgs()
+				{
+					Data = args.Data,
+				};
+				OutputReceived.Invoke(ServerId, eArgs);
+
+				var result = Regex.IsMatch(args.Data, @".*\[[:0-9]{8}\] \[Server thread\/INFO\]: Done \([s.0-9]{6}\)! For help, type ""help"".*");
+				if (result)
+				{
+					IsRunning = true;
+					ServerStarted.Invoke(this, new EventArgs());
+				}
 			}
 		}
 
 		private void OnStatusUpdated(object sender, System.Timers.ElapsedEventArgs e)
 		{
-			var updateTimeStamp = DateTime.UtcNow;
-			var cpuUsage = Server.TotalProcessorTime;
-			var cpuUsedMs = (cpuUsage - LastCpuUsage).TotalMilliseconds;
-			var totalMsPassed = (updateTimeStamp - LastUpdateTimestamp).TotalMilliseconds;
-			var cpuUsageTotal = cpuUsedMs / (Environment.ProcessorCount * totalMsPassed);
-
-			var update = new StatusUpdate()
+			try
 			{
-				CpuUsuagePercent = Convert.ToInt32(cpuUsageTotal * 100),
-				RamUsageMB = Convert.ToInt32(Server.WorkingSet64 / 1000000),
-			};
-			
-			StatusUpdated.Invoke(this, new StatusUpdatedEventArgs(ServerId, update));
+				Server.Refresh();
+				var updateTimeStamp = DateTime.UtcNow;
+				var cpuUsageTime = Server.TotalProcessorTime;
+				var cpuUsageTotal = (cpuUsageTime - LastCpuUsage).TotalMilliseconds / (Environment.ProcessorCount * (updateTimeStamp - LastUpdateTimestamp).TotalMilliseconds);
 
-			LastUpdateTimestamp = updateTimeStamp;
-			LastCpuUsage = cpuUsage;
+				var cpuUsage = Convert.ToInt32(cpuUsageTotal * 100);
+				var cpuUsageString = CpuData.AddDataAndGetString(cpuUsage);
+				var ramUsage = Convert.ToInt32(Server.WorkingSet64 / 1000000);
+				var ramUsageString = RamData.AddDataAndGetString(ramUsage);
+
+				var update = new StatusUpdate()
+				{
+					CpuUsagePercent = cpuUsage,
+					CpuUsageString = cpuUsageString,
+					RamUsageMB = ramUsage,
+					RamUsageString = ramUsageString,
+				};
+
+				StatusUpdated.Invoke(ServerId, new StatusUpdatedEventArgs()
+				{
+					StatusUpdate = update,
+				});
+
+				LastUpdateTimestamp = updateTimeStamp;
+				LastCpuUsage = cpuUsageTime;
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine(ex);
+			}
 		}
 
 		public async Task StopServer()
@@ -114,8 +155,10 @@ namespace MCServerWebWrapper.Server.Models
 				Thread.Sleep(100);
 				timeSinceLastOutput = TimeSinceLastOutput();
 			}
-			Server.OutputDataReceived += OnOutputReceived;
-			_timer.Elapsed += OnStatusUpdated;
+			IsRunning = false;
+			ServerStopped.Invoke(this, new EventArgs());
+			Server.OutputDataReceived -= OnOutputReceived;
+			_timer.Elapsed -= OnStatusUpdated;
 			_timer.Enabled = false;
 			_timer = null;
 			Server.Dispose();
@@ -132,17 +175,10 @@ namespace MCServerWebWrapper.Server.Models
 	public class OutputReceivedEventArgs : EventArgs
 	{
 		public string Data { get; set; }
-		public string ServerId { get; set; }
 	}
 
 	public class StatusUpdatedEventArgs : EventArgs
 	{
-		public StatusUpdatedEventArgs(string serverId, StatusUpdate update)
-		{
-			ServerId = serverId;
-			StatusUpdate = update;
-		}
-		public string ServerId { get; set; }
 		public StatusUpdate StatusUpdate { get; set; } 
 	}
 }

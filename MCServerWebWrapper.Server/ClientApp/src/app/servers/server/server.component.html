@@ -40,7 +40,7 @@
       </div>
       <div class="col-sm">
         <mat-tab-group>
-          <mat-tab label="Analytics"><server-analytics [server]="currentServer"></server-analytics></mat-tab>
+          <mat-tab label="Analytics"><server-analytics [server]="currentServer" [cpuPointsString] ="cpuPointsString" [ramPointsString] ="ramPointsString"></server-analytics></mat-tab>
           <mat-tab label="Joined Users"><server-users [id]="serverId"></server-users></mat-tab>
           <mat-tab label="Server Properties"><server-properties [id]="serverId"></server-properties></mat-tab>
           <mat-tab label="Version Selector"></mat-tab>

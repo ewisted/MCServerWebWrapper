@@ -7,7 +7,9 @@ namespace MCServerWebWrapper.Server.SignalR
 {
 	public class StatusUpdate
 	{
-		public int CpuUsuagePercent { get; set; }
+		public int CpuUsagePercent { get; set; }
+		public string CpuUsageString { get; set; }
 		public int RamUsageMB { get; set; }
+		public string RamUsageString { get; set; }
 	}
 }

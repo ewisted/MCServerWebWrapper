@@ -1,4 +1,6 @@
 export interface StatusUpdate {
-  cpuUsuagePercent: number;
+  cpuUsagePercent: number;
+  cpuUsageString: string;
   ramUsageMB: number;
+  ramUsageString: string;
 }

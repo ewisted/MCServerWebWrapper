@@ -69,15 +69,15 @@ namespace MCServerWebWrapper.Server.Controllers
 		[HttpGet("[action]")]
 		public async Task<IActionResult> StartServer([Required] string id, [Required] int maxRamMB, [Required] int minRamMB)
 		{
-			try
+			var result = await _serverService.StartServerById(id, maxRamMB, minRamMB);
+			if (result)
 			{
-				await _serverService.StartServerById(id, maxRamMB, minRamMB);
+				return Ok();
 			}
-			catch (Exception ex)
+			else
 			{
-				return StatusCode(500, ex);
+				return StatusCode(500);
 			}
-			return Ok(true);
 		}
 
 		[HttpGet("[action]")]

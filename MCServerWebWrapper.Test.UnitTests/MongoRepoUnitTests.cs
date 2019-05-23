@@ -96,7 +96,7 @@ namespace MCServerWebWrapper.Test.UnitTests
 		{
 			// Arrange
 			await _repo.AddServer(fooServer1);
-			fooServer1.MinecraftVersion = "1.13.2";
+			fooServer1.ServerVersion = "1.13.2";
 
 			// Act
 			await _repo.UpsertServer(fooServer1);
@@ -105,7 +105,7 @@ namespace MCServerWebWrapper.Test.UnitTests
 
 			// Assert
 			Assert.NotNull(server);
-			Assert.Equal("1.13.2", server.MinecraftVersion);
+			Assert.Equal("1.13.2", server.ServerVersion);
 		}
 
 		public void Dispose()
