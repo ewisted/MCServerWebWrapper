@@ -10,6 +10,7 @@ export interface MinecraftServer {
   dateCreated: Date;
   dateLastStarted: Date;
   dateLastStopped: Date;
+  totalUpTimeMs: number;
   percentUpTime: number;
   latestLogs: Output[];
 }

@@ -5,6 +5,8 @@ import { HubConnection, HubConnectionBuilder, LogLevel } from '@aspnet/signalr';
 import { MinecraftServer } from '../../models/minecraft-server';
 import { forEach } from '@angular/router/src/utils/collection';
 import { StatusUpdate } from '../../models/status-update';
+import { TimeSpan } from '../../models/time-span';
+import { User } from '../../models/user';
 
 @Component({
   selector: 'app-server',
@@ -19,8 +21,14 @@ export class ServerComponent implements OnInit {
   public minRam: number;
   public outputLines: string[] = [];
   public isRunning: boolean;
-  cpuPointsString: string = "";
-  ramPointsString: string = "";
+
+  joinedUsers: string[] = [];
+  users: User[] = [];
+
+  cpuPointsString: string;
+  ramPointsString: string;
+  upTimeThisSession: string;
+  totalUpTime: string;
 
   constructor(private _http: HttpClient, @Inject('BASE_URL') private _baseUrl: string, private _router: Router, private _route: ActivatedRoute) {
     this._route.params.subscribe(params => {
@@ -31,7 +39,15 @@ export class ServerComponent implements OnInit {
   ngOnInit() {
     this._http.get<MinecraftServer>(this._baseUrl + `api/MCServer/GetServerById?id=${this.serverId}`).subscribe(result => {
       this.currentServer = result;
+      this.currentServer.dateCreated = new Date(result.dateCreated);
+      this.currentServer.dateLastStarted = new Date(result.dateLastStarted);
+      this.currentServer.dateLastStopped = new Date(result.dateLastStopped);
       this.isRunning = this.currentServer.isRunning;
+      if (this.isRunning) {
+        this.currentServer.totalUpTimeMs = result.totalUpTimeMs + (Date.now() - result.dateLastStarted.getTime());
+        this.upTimeThisSession = TimeSpan.getTimeString(Date.now() - this.currentServer.dateLastStarted.getTime());
+      }
+      this.totalUpTime = TimeSpan.getTimeString(this.currentServer.totalUpTimeMs);
       this.maxRam = this.currentServer.maxRamMB;
       this.minRam = this.currentServer.minRamMB;
       this.currentServer.latestLogs.forEach(output => {
@@ -52,7 +68,9 @@ export class ServerComponent implements OnInit {
     this._hubConnection.on("outputreceived", (id: string, msg: string) => {
       if (id == this.serverId) {
         this.outputLines.push(msg);
-        this.scrollOutputToBottom();
+        setTimeout(() => {
+          this.scrollOutputToBottom();
+        }, 10);
       }
     });
 
@@ -60,7 +78,11 @@ export class ServerComponent implements OnInit {
       if (id == this.serverId) {
         this.cpuPointsString = update.cpuUsageString;
         this.ramPointsString = update.ramUsageString;
-        console.log(this.ramPointsString);
+        if (this.isRunning) {
+          var upTimeThisSessionMs = Date.now() - this.currentServer.dateLastStarted.getTime()
+          this.upTimeThisSession = TimeSpan.getTimeString(upTimeThisSessionMs);
+          this.totalUpTime = TimeSpan.getTimeString(this.currentServer.totalUpTimeMs + upTimeThisSessionMs);
+        }
       }
     });
 
@@ -73,6 +95,45 @@ export class ServerComponent implements OnInit {
     this._hubConnection.on("serverstopped", (id: string) => {
       if (this.serverId == id) {
         this.isRunning = false;
+        this.cpuPointsString = null;
+        this.ramPointsString = null;
+        this.upTimeThisSession = null;
+      }
+    });
+
+    this._hubConnection.on("userjoined", (id: string, username: string) => {
+      if (id == this.serverId) {
+        this.joinedUsers.push(username);
+        var user = new User();
+        user.connectedServerId = id;
+        user.username = username;
+        var index = this.users.findIndex(u => u.username == username);
+        if (index == -1) {
+          this.users.push(user);
+        }
+        else {
+          this.users[index] = user;
+        }
+      }
+    });
+
+    this._hubConnection.on("userleft", (id: string, username: string) => {
+      if (id == this.serverId) {
+        var index = this.joinedUsers.indexOf(username);
+        var newUserList: string[] = [];
+        for (var i = 0; i < this.joinedUsers.length; i++) {
+          if (i != index) {
+            newUserList.push(this.joinedUsers[i]);
+          }
+        }
+        index = this.users.findIndex(u => u.username == username);
+        if (index != null) {
+          var user = new User();
+          user.connectedServerId = "";
+          user.username = username;
+          this.users[index] = user;
+        }
+        this.joinedUsers = newUserList;
       }
     });
   }
@@ -100,7 +161,9 @@ export class ServerComponent implements OnInit {
     }
     else {
       this.outputLines.push("Starting Server...");
-      this.scrollOutputToBottom();
+      setTimeout(() => {
+        this.scrollOutputToBottom();
+      }, 10);
       this._http.get(this._baseUrl + `api/MCServer/StartServer?id=${this.serverId}&maxRamMB=${this.maxRam}&minRamMB=${this.minRam}`).subscribe(error => console.error(error));
     }
   }

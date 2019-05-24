@@ -11,6 +11,8 @@ export class AnalyticsComponent implements OnInit {
   @Input() server: MinecraftServer;
   @Input() cpuPointsString: string;
   @Input() ramPointsString: string;
+  @Input() upTimeThisSession: string;
+  @Input() totalUpTime: string;
   percentUpTime: number = 0;
 
   constructor(@Inject('BASE_URL') private _baseUrl: string) { }

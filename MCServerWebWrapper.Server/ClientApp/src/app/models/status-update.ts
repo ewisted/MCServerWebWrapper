@@ -3,4 +3,6 @@ export interface StatusUpdate {
   cpuUsageString: string;
   ramUsageMB: number;
   ramUsageString: string;
+  upTimeThisSession: string;
+  totalUpTime: string;
 }

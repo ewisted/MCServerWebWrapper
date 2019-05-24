@@ -2,35 +2,58 @@
   <mat-card-content>
     <div class="container-fluid">
       <div class="row justify-content-between">
-        <div class="col-auto mr-auto" style="border-style:solid">
+        <div class="col-auto mr-auto">
           <h3>Up Time</h3>
-          <circle-progress [percent]="percentUpTime"
-                           radius="60"
-                           space="-10"
-                           outerStrokeGradient="true"
-                           outerStrokeWidth="10"
-                           innerStrokeWidth="10"
-                           outerStrokeColor="#4882c2"
-                           outerStrokeGradientStopColor="#53a9ff"
-                           innerStrokeColor="#e7e8ea"
-                           animation="true"
-                           animationDuration="300"
-                           titleFontSize="24"
-                           animateTitle="true"></circle-progress>
-          <p>99/100</p>
+          <div class="row justify-content-center">
+            <circle-progress [percent]="percentUpTime"
+                             radius="60"
+                             space="-10"
+                             outerStrokeGradient="true"
+                             outerStrokeWidth="10"
+                             innerStrokeWidth="10"
+                             outerStrokeColor="#4882c2"
+                             outerStrokeGradientStopColor="#53a9ff"
+                             innerStrokeColor="#e7e8ea"
+                             animation="true"
+                             animationDuration="300"
+                             titleFontSize="24"
+                             animateTitle="true"></circle-progress>
+          </div>
+          <br />
+          <div class="row justify-content-between">
+            <div class="col-auto mr-auto">
+              <p>Time since last restart:</p>
+            </div>
+            <div class="col-auto">
+              <p>{{upTimeThisSession}}</p>
+            </div>
+          </div>
+          <div class="row justify-content-between">
+            <div class="col-auto mr-auto">
+              <p>Total Up Time:</p>
+            </div>
+            <div class="col-auto">
+              <p>{{totalUpTime}}</p>
+            </div>
+          </div>
         </div>
-        <div class="col-auto" style="border-style:solid">
+        <div class="col-auto">
           <!--Scrolling line graph for player count here-->
           <h3>CPU</h3>
           <div class="status-chart cpu">
             <svg height="200" width="413">
               <polygon [attr.points]="cpuPointsString"
-                       style="fill:aliceblue;stroke:cornflowerblue;stroke-width:1"
-                       transform="translate(413,0) scale(-1, 1)" />
+                        style="fill:aliceblue;stroke:cornflowerblue;stroke-width:1"
+                        transform="translate(413,0) scale(-1, 1)" />
             </svg>
           </div>
         </div>
-        <div class="col-auto" style="border-style:solid">
+      </div>
+      <div class="row justify-content-between">
+        <div class="col-auto mr-auto">
+
+        </div>
+        <div class="col-auto">
           <h3>Memory</h3>
           <div class="status-chart ram">
             <svg height="200" width="413">
@@ -41,6 +64,6 @@
           </div>
         </div>
       </div>
-    </div>
-  </mat-card-content>
+      </div>
+</mat-card-content>
 </mat-card>
