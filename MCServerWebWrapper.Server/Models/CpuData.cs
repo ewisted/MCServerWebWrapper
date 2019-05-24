@@ -15,7 +15,7 @@ namespace MCServerWebWrapper.Server.Models
 		{
 			CpuLogs = new List<int>();
 			xValues = new List<int>();
-			for (var i = 1; i <= 60; i++)
+			for (var i = 0; i < 60; i++)
 			{
 				xValues.Add(i * 7);
 			}
@@ -34,9 +34,14 @@ namespace MCServerWebWrapper.Server.Models
 		public string GetString()
 		{
 			var coordsList = new List<string>();
+			coordsList.Insert(0, "0,200");
 			for (var i = 0; i < CpuLogs.Count; i++)
 			{
 				coordsList.Add($"{xValues[i]},{CpuLogs[i]}");
+				if (i == CpuLogs.Count - 1)
+				{
+					coordsList.Add($"{xValues[i]},200");
+				}
 			}
 			return String.Join(" ", coordsList);
 		}

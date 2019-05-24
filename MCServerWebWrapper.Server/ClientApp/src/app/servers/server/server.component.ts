@@ -37,7 +37,9 @@ export class ServerComponent implements OnInit {
       this.currentServer.latestLogs.forEach(output => {
         this.outputLines.push(output.line);
       });
-      this.scrollOutputToBottom();
+      setTimeout(() => {
+        this.scrollOutputToBottom();
+      }, 100);
     }, error => console.error(error));
 
     this._hubConnection = new HubConnectionBuilder()

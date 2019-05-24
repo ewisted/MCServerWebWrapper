@@ -16,7 +16,7 @@ namespace MCServerWebWrapper.Server.Models
 			MaxRamMB = maxRamMB;
 			RamLogs = new List<int>();
 			xValues = new List<int>();
-			for (var i = 1; i <= 60; i++)
+			for (var i = 0; i < 60; i++)
 			{
 				xValues.Add(i * 7);
 			}
@@ -36,9 +36,14 @@ namespace MCServerWebWrapper.Server.Models
 		public string GetString()
 		{
 			var coordsList = new List<string>();
+			coordsList.Insert(0, "0,200");
 			for (var i = 0; i < RamLogs.Count; i++)
 			{
 				coordsList.Add($"{xValues[i]},{RamLogs[i]}");
+				if (i == RamLogs.Count - 1)
+				{
+					coordsList.Add($"{xValues[i]},200");
+				}
 			}
 			return String.Join(" ", coordsList);
 		}

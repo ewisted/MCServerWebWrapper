@@ -2,9 +2,10 @@
   <mat-card-content>
     <div class="container-fluid">
       <div class="row justify-content-between">
-        <div class="col-auto mr-auto">
+        <div class="col-auto mr-auto" style="border-style:solid">
+          <h3>Up Time</h3>
           <circle-progress [percent]="percentUpTime"
-                           radius="75"
+                           radius="60"
                            space="-10"
                            outerStrokeGradient="true"
                            outerStrokeWidth="10"
@@ -14,36 +15,28 @@
                            innerStrokeColor="#e7e8ea"
                            animation="true"
                            animationDuration="300"
-                           title="Up Time"
-                           [subtitle]="percentUpTime + '%'"
                            titleFontSize="24"
-                           subtitleFontSize="12"
                            animateTitle="true"></circle-progress>
+          <p>99/100</p>
         </div>
-        <div class="col-auto">
+        <div class="col-auto" style="border-style:solid">
           <!--Scrolling line graph for player count here-->
           <h3>CPU</h3>
           <div class="status-chart cpu">
             <svg height="200" width="413">
-              <polyline [attr.points]="cpuPointsString"
-                        style="fill:none;stroke:cornflowerblue;stroke-width:1"
-                        transform="translate(420,0) scale(-1, 1)" />
+              <polygon [attr.points]="cpuPointsString"
+                       style="fill:aliceblue;stroke:cornflowerblue;stroke-width:1"
+                       transform="translate(413,0) scale(-1, 1)" />
             </svg>
           </div>
         </div>
-      </div>
-      <br />
-      <div class="row justify-content-between">
-        <div class="col-auto mr-auto">
-          <!--Second circle percent chart for downtime here-->
-        </div>
-        <div class="col-auto">
+        <div class="col-auto" style="border-style:solid">
           <h3>Memory</h3>
           <div class="status-chart ram">
             <svg height="200" width="413">
-              <polyline [attr.points]="ramPointsString"
-                        style="fill:none;stroke:mediumorchid;stroke-width:1"
-                        transform="translate(420,0) scale(-1, 1)" />
+              <polygon [attr.points]="ramPointsString"
+                       style="fill:whitesmoke;stroke:mediumorchid;stroke-width:1"
+                       transform="translate(413,0) scale(-1, 1)" />
             </svg>
           </div>
         </div>

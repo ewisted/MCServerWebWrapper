@@ -98,7 +98,7 @@ namespace MCServerWebWrapper.Server.Models
 				};
 				OutputReceived.Invoke(ServerId, eArgs);
 
-				var result = Regex.IsMatch(args.Data, @".*\[[:0-9]{8}\] \[Server thread\/INFO\]: Done \([s.0-9]{6}\)! For help, type ""help"".*");
+				var result = Regex.IsMatch(args.Data, @".*\[[:0-9]{8}\] \[Server thread\/INFO\]: Done \([s.0-9]{6,8}\)! For help, type ""help"".*");
 				if (result)
 				{
 					IsRunning = true;
