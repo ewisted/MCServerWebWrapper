@@ -39,12 +39,12 @@ export class ServerComponent implements OnInit {
   ngOnInit() {
     this._http.get<MinecraftServer>(this._baseUrl + `api/MCServer/GetServerById?id=${this.serverId}`).subscribe(result => {
       this.currentServer = result;
-      this.currentServer.dateCreated = new Date(result.dateCreated);
-      this.currentServer.dateLastStarted = new Date(result.dateLastStarted);
-      this.currentServer.dateLastStopped = new Date(result.dateLastStopped);
+      this.currentServer.dateCreated = new Date(Date.parse(result.dateCreated.toString()));
+      this.currentServer.dateLastStarted = new Date(Date.parse(result.dateLastStarted.toString()));
+      this.currentServer.dateLastStopped = new Date(Date.parse(result.dateLastStopped.toString()));
       this.isRunning = this.currentServer.isRunning;
       if (this.isRunning) {
-        this.currentServer.totalUpTimeMs = result.totalUpTimeMs + (Date.now() - result.dateLastStarted.getTime());
+        this.currentServer.totalUpTimeMs = result.totalUpTimeMs + (Date.now() - this.currentServer.dateLastStarted.getTime());
         this.upTimeThisSession = TimeSpan.getTimeString(Date.now() - this.currentServer.dateLastStarted.getTime());
       }
       this.totalUpTime = TimeSpan.getTimeString(this.currentServer.totalUpTimeMs);
@@ -88,12 +88,14 @@ export class ServerComponent implements OnInit {
 
     this._hubConnection.on("serverstarted", (id: string) => {
       if (this.serverId == id) {
+        this.currentServer.dateLastStarted = new Date();
         this.isRunning = true;
       }
     });
 
     this._hubConnection.on("serverstopped", (id: string) => {
       if (this.serverId == id) {
+        this.currentServer.dateLastStopped = new Date();
         this.isRunning = false;
         this.cpuPointsString = null;
         this.ramPointsString = null;
