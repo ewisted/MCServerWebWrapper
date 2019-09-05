@@ -17,6 +17,7 @@ import { ServerComponent } from './servers/server/server.component';
 import { PropertiesComponent } from './servers/server/properties/properties.component';
 import { UsersComponent } from './servers/server/users/users.component';
 import { AnalyticsComponent } from './servers/server/analytics/analytics.component';
+import { ServerSettingsComponent } from './servers/server/settings/settings.component';
 
 @NgModule({
   declarations: [
@@ -27,6 +28,7 @@ import { AnalyticsComponent } from './servers/server/analytics/analytics.compone
     ServersComponent,
     ServerComponent,
     PropertiesComponent,
+    ServerSettingsComponent,
     UsersComponent,
     AnalyticsComponent,
     FetchDataComponent

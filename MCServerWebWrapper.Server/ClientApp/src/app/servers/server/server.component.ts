@@ -28,7 +28,10 @@ export class ServerComponent implements OnInit {
   cpuPointsString: string;
   ramPointsString: string;
   upTimeThisSession: string;
-  totalUpTime: string;
+	totalUpTime: string;
+
+	jarDownloadProgress: number;
+	jarDownloadComplete: boolean;
 
   constructor(private _http: HttpClient, @Inject('BASE_URL') private _baseUrl: string, private _router: Router, private _route: ActivatedRoute) {
     this._route.params.subscribe(params => {
@@ -58,86 +61,7 @@ export class ServerComponent implements OnInit {
       }, 100);
     }, error => console.error(error));
 
-    this._hubConnection = new HubConnectionBuilder()
-      .withUrl(this._baseUrl + 'angular-hub')
-      .configureLogging(LogLevel.Information)
-      .build();
-
-    this._hubConnection.start().catch(err => console.error(err.toString()));
-
-    this._hubConnection.on("outputreceived", (id: string, msg: string) => {
-      if (id == this.serverId) {
-        this.outputLines.push(msg);
-        setTimeout(() => {
-          this.scrollOutputToBottom();
-        }, 10);
-      }
-    });
-
-    this._hubConnection.on("statusupdate", (id: string, update: StatusUpdate) => {
-      if (id == this.serverId) {
-        this.cpuPointsString = update.cpuUsageString;
-        this.ramPointsString = update.ramUsageString;
-        if (this.isRunning) {
-          var upTimeThisSessionMs = Date.now() - this.currentServer.dateLastStarted.getTime()
-          this.upTimeThisSession = TimeSpan.getTimeString(upTimeThisSessionMs);
-          this.totalUpTime = TimeSpan.getTimeString(this.currentServer.totalUpTimeMs + upTimeThisSessionMs);
-        }
-      }
-    });
-
-    this._hubConnection.on("serverstarted", (id: string) => {
-      if (this.serverId == id) {
-        this.currentServer.dateLastStarted = new Date();
-        this.isRunning = true;
-      }
-    });
-
-    this._hubConnection.on("serverstopped", (id: string) => {
-      if (this.serverId == id) {
-        this.currentServer.dateLastStopped = new Date();
-        this.isRunning = false;
-        this.cpuPointsString = null;
-        this.ramPointsString = null;
-        this.upTimeThisSession = null;
-      }
-    });
-
-    this._hubConnection.on("userjoined", (id: string, username: string) => {
-      if (id == this.serverId) {
-        this.joinedUsers.push(username);
-        var user = new User();
-        user.connectedServerId = id;
-        user.username = username;
-        var index = this.users.findIndex(u => u.username == username);
-        if (index == -1) {
-          this.users.push(user);
-        }
-        else {
-          this.users[index] = user;
-        }
-      }
-    });
-
-    this._hubConnection.on("userleft", (id: string, username: string) => {
-      if (id == this.serverId) {
-        var index = this.joinedUsers.indexOf(username);
-        var newUserList: string[] = [];
-        for (var i = 0; i < this.joinedUsers.length; i++) {
-          if (i != index) {
-            newUserList.push(this.joinedUsers[i]);
-          }
-        }
-        index = this.users.findIndex(u => u.username == username);
-        if (index != null) {
-          var user = new User();
-          user.connectedServerId = "";
-          user.username = username;
-          this.users[index] = user;
-        }
-        this.joinedUsers = newUserList;
-      }
-    });
+	  this.setupSignalR();
   }
 
   scrollOutputToBottom() {
@@ -178,5 +102,100 @@ export class ServerComponent implements OnInit {
     this._http.get(this._baseUrl + `api/MCServer/RemoveServer?id=${this.serverId}`).subscribe(() => {
       this._router.navigate(['servers/']);
     }, error => console.error(error));
-  }
+	}
+
+	setupSignalR() {
+		this._hubConnection = new HubConnectionBuilder()
+			.withUrl(this._baseUrl + 'angular-hub')
+			.configureLogging(LogLevel.Information)
+			.build();
+
+		this._hubConnection.start().catch(err => console.error(err.toString()));
+
+		this._hubConnection.on("outputreceived", (id: string, msg: string) => {
+			if (id == this.serverId) {
+				this.outputLines.push(msg);
+				setTimeout(() => {
+					this.scrollOutputToBottom();
+				}, 10);
+			}
+		});
+
+		this._hubConnection.on("statusupdate", (id: string, update: StatusUpdate) => {
+			if (id == this.serverId) {
+				this.cpuPointsString = update.cpuUsageString;
+				this.ramPointsString = update.ramUsageString;
+				if (this.isRunning) {
+					var upTimeThisSessionMs = Date.now() - this.currentServer.dateLastStarted.getTime()
+					this.upTimeThisSession = TimeSpan.getTimeString(upTimeThisSessionMs);
+					this.totalUpTime = TimeSpan.getTimeString(this.currentServer.totalUpTimeMs + upTimeThisSessionMs);
+				}
+			}
+		});
+
+		this._hubConnection.on("serverstarted", (id: string) => {
+			if (this.serverId == id) {
+				this.currentServer.dateLastStarted = new Date();
+				this.isRunning = true;
+			}
+		});
+
+		this._hubConnection.on("serverstopped", (id: string) => {
+			if (this.serverId == id) {
+				this.currentServer.dateLastStopped = new Date();
+				this.isRunning = false;
+				this.cpuPointsString = null;
+				this.ramPointsString = null;
+				this.upTimeThisSession = null;
+			}
+		});
+
+		this._hubConnection.on("userjoined", (id: string, username: string) => {
+			if (id == this.serverId) {
+				this.joinedUsers.push(username);
+				var user = new User();
+				user.connectedServerId = id;
+				user.username = username;
+				var index = this.users.findIndex(u => u.username == username);
+				if (index == -1) {
+					this.users.push(user);
+				}
+				else {
+					this.users[index] = user;
+				}
+			}
+		});
+
+		this._hubConnection.on("userleft", (id: string, username: string) => {
+			if (id == this.serverId) {
+				var index = this.joinedUsers.indexOf(username);
+				var newUserList: string[] = [];
+				for (var i = 0; i < this.joinedUsers.length; i++) {
+					if (i != index) {
+						newUserList.push(this.joinedUsers[i]);
+					}
+				}
+				index = this.users.findIndex(u => u.username == username);
+				if (index != null) {
+					var user = new User();
+					user.connectedServerId = "";
+					user.username = username;
+					this.users[index] = user;
+				}
+				this.joinedUsers = newUserList;
+			}
+		});
+
+		this._hubConnection.on("jardownloadprogresschanged", (id: string, progress: number) => {
+			if (id == this.serverId) {
+				this.jarDownloadProgress = progress;
+			}
+		});
+
+		this._hubConnection.on("jardownloadcompleted", (id: string) => {
+			if (id == this.serverId) {
+				this.jarDownloadComplete = true;
+			}
+		});
+	}
 }

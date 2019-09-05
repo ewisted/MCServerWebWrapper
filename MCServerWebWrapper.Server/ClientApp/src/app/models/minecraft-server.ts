@@ -1,6 +1,7 @@
 export interface MinecraftServer {
   id: string;
-  name: string;
+	name: string;
+	serverVersion: string;
   maxRamMB: number;
   minRamMB: number;
   isRunning: boolean;

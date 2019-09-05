@@ -13,5 +13,7 @@ namespace MCServerWebWrapper.Shared.SignalR
 		public const string StatusUpdate = "statusupdate";
 		public const string UserJoined = "userjoined";
 		public const string UserLeft = "userleft";
+		public const string JarDownloadProgressChanged = "jardownloadprogresschanged";
+		public const string JarDownloadCompleted = "jardownloadcompleted";
 	}
 }

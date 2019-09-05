@@ -9,6 +9,7 @@ namespace MCServerWebWrapper.Server.Models.DTOs
 	{
 		public string Id { get; set; }
 		public string Name { get; set; }
+		public string ServerVersion { get; set; }
 		public int MaxRamMB { get; set; }
 		public int MinRamMB { get; set; }
 		public bool IsRunning { get; set; }

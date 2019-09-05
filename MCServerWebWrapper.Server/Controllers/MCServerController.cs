@@ -1,17 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using MCServerWebWrapper.Server.Data;
-using MCServerWebWrapper.Server.Data.Models;
 using MCServerWebWrapper.Server.Models;
 using MCServerWebWrapper.Server.Services;
 using MCServerWebWrapper.Server.Models.DTOs;
 using Microsoft.AspNetCore.Mvc;
-using MCServerWebWrapper.Server.Models.DTOs;
 
 namespace MCServerWebWrapper.Server.Controllers
 {
@@ -19,20 +16,54 @@ namespace MCServerWebWrapper.Server.Controllers
 	public class MCServerController : Controller
 	{
 		private readonly MCServerService _serverService;
+		private readonly ServerJarService _jarService;
 		private readonly IMapper _mapper;
 		private readonly IServerRepo _repo;
 		private readonly IUserRepo _userRepo;
 
-		public MCServerController(MCServerService serverService, IMapper mapper, IServerRepo repo, IUserRepo userRepo)
+		public MCServerController(MCServerService serverService, ServerJarService jarService, IMapper mapper, IServerRepo repo, IUserRepo userRepo)
 		{
 			_serverService = serverService;
+			_jarService = jarService;
 			_mapper = mapper;
 			_repo = repo;
 			_userRepo = userRepo;
 		}
 
+		[HttpGet("[action]")]
+		public async Task<IActionResult> GetAvailableVersions()
+		{
+			try
+			{
+				var versions = await _jarService.GetJarVersions();
+				return Ok(versions);
+			}
+			catch (Exception ex)
+			{
+				return StatusCode(500, ex.Message);
+			}
+		}
+
 		[HttpPost("[action]")]
-		public async Task<IActionResult> SaveServerProperties(string id, [FromBody] ServerProperties properties)
+		public async Task<IActionResult> DownloadServerJar([Required] string id, [FromBody] VanillaVersion version)
+		{
+			try
+			{
+				var server = await _repo.GetServerById(id);
+				var jarUri = await _jarService.GetJarUriFromVersion(version);
+				await _jarService.DownloadJar(id, jarUri, server.ServerPath);
+				server.ServerVersion = version.Id;
+				await _repo.UpsertServer(server);
+			}
+			catch (Exception ex)
+			{
+				return StatusCode(500, ex.Message);
+			}
+			return Ok();
+		}
+
+		[HttpPost("[action]")]
+		public async Task<IActionResult> SaveServerProperties([Required] string id, [FromBody] ServerProperties properties)
 		{
 			if (properties == null)
 			{

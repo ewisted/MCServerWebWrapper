@@ -1,0 +1,15 @@
+<div class="container-fluid">
+  <h4>Select server version</h4>
+  <mat-form-field>
+    <mat-label>Version</mat-label>
+    <mat-select [(ngModel)]="selectedVersion">
+      <mat-option *ngFor="let version of versions" [value]="version">
+        {{version.id}}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+  <button mat-flat-button color="primary" (click)="downloadServerJar()">Download</button>
+  <br />
+  <p>Current: {{ server.serverVersion }}</p>
+  <mat-progress-bar mode="determinate" [value]="jarDownloadProgress" [hidden]="!isDownloading"></mat-progress-bar>
+</div>
