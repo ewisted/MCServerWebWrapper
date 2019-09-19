@@ -1,0 +1,14 @@
+.status-chart {
+  border-style: solid;
+  border-width: thin;
+  height: 202px;
+  width: 415px;
+}
+
+.cpu {
+  border-color: cornflowerblue;
+}
+
+.ram {
+  border-color: mediumorchid;
+}

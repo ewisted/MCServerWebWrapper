@@ -26,8 +26,10 @@ namespace MCServerWebWrapper
 		public void ConfigureServices(IServiceCollection services)
 		{
 			services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+			services.AddHttpClient();
 			services.AddSignalR();
 			services.AddSingleton<MCServerService>();
+			services.AddSingleton<ServerJarService>();
 			services.AddTransient<IServerRepo, ServerMongoRepo>();
 			services.AddTransient<IUserRepo, UserMongoRepo>();
 			services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);

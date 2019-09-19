@@ -62,6 +62,8 @@ namespace MCServerWebWrapper.Server.Services
 				MinRamMB = 2048,
 				TimesRan = 0,
 				Logs = new List<Output>(),
+				TotalUpTime = TimeSpan.Zero,
+				PlayerCountChanges = new List<PlayerCountChange>(),
 			};
 
 			// Build the server path
@@ -102,55 +104,44 @@ namespace MCServerWebWrapper.Server.Services
 			await _repo.RemoveServer(id);
 		}
 
-		public async Task StartServerById(string id, int maxRamMB, int minRamMB)
+		public async Task<bool> StartServerById(string id, int maxRamMB, int minRamMB)
 		{
 			var server = await _repo.GetServerById(id);
 			if (server == null)
 			{
 				// TODO: Add error handling here
-				return;
+				return false;
 			}
 			if (_runningServers.ContainsKey(id))
 			{
 				// TODO: Add error handling here
-				return;
+				return false;
 			}
 
 			var serverProcess = new ServerProcess(server.Id, maxRamMB, minRamMB);
 			serverProcess.OutputReceived += s_OutputReceived;
+			serverProcess.StatusUpdated += s_StatusUpdated;
+			serverProcess.ServerStarted += s_ServerStarted;
+			serverProcess.ServerStopped += s_ServerStopped;
 
-			_runningServers.TryAdd(server.Id, serverProcess);
-			var pId = serverProcess.StartServer(_logger, _angularHub);
-			server.MaxRamMB = maxRamMB;
-			server.MinRamMB = minRamMB;
-			server.ProcessId = pId;
-			server.IsRunning = true;
-			server.TimesRan++;
-			await _repo.UpsertServer(server);
-			await _angularHub.Clients.All.SendAsync(SignalrMethodNames.ServerStarted, id);
+			var result = serverProcess.StartServer();
+			if (result)
+			{
+				_runningServers.TryAdd(server.Id, serverProcess);
+			}
 
-			return;
+			return result;
 		}
 
 		public async Task StopServerById(string id)
 		{
-			_runningServers.TryGetValue(id, out var server);
-			if (server == null)
+			var result = _runningServers.TryGetValue(id, out var server);
+			if (!result)
 			{
 				// TODO: Add error handling here
 				return;
 			}
-
 			await server.StopServer();
-			server.OutputReceived -= s_OutputReceived;
-			_runningServers.TryRemove(id, out server);
-
-			var dbServer = await _repo.GetServerById(id);
-			dbServer.IsRunning = false;
-			dbServer.ProcessId = null;
-			await _repo.UpsertServer(dbServer);
-			await _angularHub.Clients.All.SendAsync(SignalrMethodNames.ServerStopped, id);
-
 			return;
 		}
 
@@ -183,8 +174,8 @@ namespace MCServerWebWrapper.Server.Services
 
 		public async Task SendConsoleInput(string serverId, string msg)
 		{
-			_runningServers.TryGetValue(serverId, out var server);
-			if (server == null)
+			var result = _runningServers.TryGetValue(serverId, out var server);
+			if (!result)
 			{
 				throw new Exception("Server is not currently running");
 			}
@@ -197,7 +188,9 @@ namespace MCServerWebWrapper.Server.Services
 			output.TimeStamp = DateTime.UtcNow;
 			output.Line = line;
 
-			_runningServers.TryGetValue(serverId, out var server);
+			var result = _runningServers.TryGetValue(serverId, out var server);
+			if (!result) return;
+
 			server.LastOutput = output;
 			_runningServers.AddOrUpdate(serverId, server, (key, value) => value = server);
 
@@ -221,12 +214,20 @@ namespace MCServerWebWrapper.Server.Services
 				user.ConnectedServerId = "";
 				await _angularHub.Clients.All.SendAsync(SignalrMethodNames.UserLeft, serverId, user.Username);
 				await _userRepo.UpsertUser(user);
+				var dbServer = await _repo.GetServerById(serverId);
+				var change = new PlayerCountChange()
+				{
+					Timestamp = DateTime.UtcNow,
+					PlayersCurrentlyConnected = dbServer.PlayersCurrentlyConnected - 1,
+					TriggeredByUsername = user.Username,
+					IsJoin = false,
+				};
+				await _repo.AddPlayerCountDataByServerId(serverId, change);
 				await _repo.AddLogDataByServerId(serverId, output);
 				return;
 			}
 
-			var userMessageTest = new Regex(@"\<(.*?)\>");
-			var userMessageMatch = userMessageTest.Match(output.Line);
+			var userMessageMatch = Regex.Match(output.Line, @"\<(.*?)\>");
 			if (!string.IsNullOrWhiteSpace(userMessageMatch.Value))
 			{
 				output.User = userMessageMatch.Value.Trim('<', '>');
@@ -234,16 +235,25 @@ namespace MCServerWebWrapper.Server.Services
 				return;
 			}
 
-			var userConnectedTest = new Regex(@"(?=.*?)([A-Za-z0-9]+)\[\/(.*?)\]");
-			var userConnectedMatch = userConnectedTest.Match(output.Line);
+			var userConnectedMatch = Regex.Match(output.Line, @"(?=.*?)([A-Za-z0-9]+)\[\/(.*?)\]");
 			if (!string.IsNullOrWhiteSpace(userConnectedMatch.Value))
 			{
+				await _angularHub.Clients.All.SendAsync(SignalrMethodNames.UserJoined, serverId, userConnectedMatch.Groups[1].Value);
 				output.User = userConnectedMatch.Groups[1].Value;
 				var user = new User();
 				user.Username = output.User;
 				user.IP = userConnectedMatch.Groups[2].Value.Split(':').FirstOrDefault();
-				await _angularHub.Clients.All.SendAsync(SignalrMethodNames.UserJoined, serverId, user.Username);
 				await _userRepo.UpsertUser(user);
+
+				var dbServer = await _repo.GetServerById(serverId);
+				var change = new PlayerCountChange()
+				{
+					Timestamp = DateTime.UtcNow,
+					PlayersCurrentlyConnected = dbServer.PlayersCurrentlyConnected + 1,
+					TriggeredByUsername = user.Username,
+					IsJoin = true,
+				};
+				await _repo.AddPlayerCountDataByServerId(serverId, change);
 			}
 
 			await _repo.AddLogDataByServerId(serverId, output);
@@ -252,9 +262,60 @@ namespace MCServerWebWrapper.Server.Services
 
 		private async void s_OutputReceived(object sender, OutputReceivedEventArgs args)
 		{
-			_logger.Log(LogLevel.Information, args.Data);
-			await _angularHub.Clients.All.SendAsync(SignalrMethodNames.ServerOutput, args.ServerId, args.Data);
-			await HandleOutput(args.ServerId, args.Data);
+			if (sender.GuardValidObjectId(out var serverId))
+			{
+				_logger.Log(LogLevel.Information, args.Data);
+				await _angularHub.Clients.All.SendAsync(SignalrMethodNames.ServerOutput, serverId, args.Data);
+				await HandleOutput(serverId, args.Data);
+			}
+		}
+
+		private async void s_ServerStarted(object sender, EventArgs args)
+		{
+			if (sender.GetType() == typeof(ServerProcess))
+			{
+				var server = (ServerProcess)sender;
+
+				var dbServer = await _repo.GetServerById(server.ServerId);
+				dbServer.MaxRamMB = server.MaxRamMb;
+				dbServer.MinRamMB = server.MinRamMb;
+				dbServer.ProcessId = server.Server.Id;
+				dbServer.IsRunning = true;
+				dbServer.TimesRan++;
+				dbServer.DateLastStarted = DateTime.UtcNow;
+				await _repo.UpsertServer(dbServer);
+
+				await _angularHub.Clients.All.SendAsync(SignalrMethodNames.ServerStarted, server.ServerId);
+			}
+		}
+
+		private async void s_ServerStopped(object sender, EventArgs args)
+		{
+			if (sender.GetType() == typeof(ServerProcess))
+			{
+				var server = (ServerProcess)sender;
+				server.OutputReceived -= s_OutputReceived;
+				server.StatusUpdated -= s_StatusUpdated;
+				server.ServerStarted -= s_ServerStarted;
+				server.ServerStopped -= s_ServerStopped;
+				_runningServers.TryRemove(server.ServerId, out server);
+
+				var dbServer = await _repo.GetServerById(server.ServerId);
+				dbServer.IsRunning = false;
+				dbServer.ProcessId = null;
+				dbServer.DateLastStopped = DateTime.UtcNow;
+				dbServer.TotalUpTime = dbServer.TotalUpTime + (DateTime.UtcNow - dbServer.DateLastStarted);
+				await _repo.UpsertServer(dbServer);
+				await _angularHub.Clients.All.SendAsync(SignalrMethodNames.ServerStopped, server.ServerId);
+			}
+		}
+
+		private async void s_StatusUpdated(object sender, StatusUpdatedEventArgs args)
+		{
+			if (sender.GuardValidObjectId(out var serverId))
+			{
+				await _angularHub.Clients.All.SendAsync(SignalrMethodNames.StatusUpdate, serverId, args.StatusUpdate);
+			}
 		}
 	}
 }

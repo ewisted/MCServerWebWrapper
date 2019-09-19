@@ -44,7 +44,10 @@
     <None Remove="ClientApp\src\app\main-material-module.ts" />
     <None Remove="ClientApp\src\app\models\minecraft-server.ts" />
     <None Remove="ClientApp\src\app\models\server-properties.ts" />
+    <None Remove="ClientApp\src\app\models\status-update.ts" />
+    <None Remove="ClientApp\src\app\models\time-span.ts" />
     <None Remove="ClientApp\src\app\models\user.ts" />
+    <None Remove="ClientApp\src\app\models\vanilla-version.ts" />
     <None Remove="ClientApp\src\app\servers\server\server.component.ts" />
   </ItemGroup>
 
@@ -56,9 +59,16 @@
       <SubType>Code</SubType>
     </TypeScriptCompile>
     <TypeScriptCompile Include="ClientApp\src\app\models\server-properties.ts" />
+    <TypeScriptCompile Include="ClientApp\src\app\models\status-update.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
+    <TypeScriptCompile Include="ClientApp\src\app\models\time-span.ts">
+      <SubType>Code</SubType>
+    </TypeScriptCompile>
     <TypeScriptCompile Include="ClientApp\src\app\models\user.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>
+    <TypeScriptCompile Include="ClientApp\src\app\models\vanilla-version.ts" />
     <TypeScriptCompile Include="ClientApp\src\app\servers\server\server.component.ts">
       <SubType>Code</SubType>
     </TypeScriptCompile>

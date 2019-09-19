@@ -6,7 +6,7 @@ import { User } from '../../../models/user';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 
 @Component({
-  selector: 'users',
+  selector: 'server-users',
   templateUrl: './users.component.html',
   styleUrls: ['./users.component.css'],
   animations: [
@@ -19,9 +19,8 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
 })
 export class UsersComponent implements OnInit {
   @Input() id: string;
-  private _hubConnection: HubConnection | HubConnectionBuilder;
-  public joinedUsers: string[] = [];
-  public users: User[];
+  @Input() joinedUsers: string[];
+  @Input() users: User[];
   expandedUser: User | null;
   columnsToDisplay = ['username'];
 
@@ -30,54 +29,13 @@ export class UsersComponent implements OnInit {
 
   ngOnInit() {
     this._http.get<User[]>(this._baseUrl + `api/MCServer/GetUsersByServerId?id=${this.id}`).subscribe(result => {
-      this.users = result;
-      this.users.forEach(u => {
-        if (u.connectedServerId == this.id) {
-          this.joinedUsers.push(u.username);
-        }
-      });
-    });
-
-    this._hubConnection = new HubConnectionBuilder()
-      .withUrl(this._baseUrl + 'angular-hub')
-      .configureLogging(LogLevel.Information)
-      .build();
-
-    this._hubConnection.start().catch(err => console.error(err.toString()));
-
-    this._hubConnection.on("userjoined", (id: string, username: string) => {
-      if (id == this.id) {
-        this.joinedUsers.push(username);
-        var user = new User();
-        user.connectedServerId = id;
-        user.username = username;
-        var index = this.users.findIndex(u => u.username == username);
-        if (index == null) {
-          this.users.push(user);
-        }
-        else {
-          this.users[index] = user;
-        }
-      }
-    });
-
-    this._hubConnection.on("userleft", (id: string, username: string) => {
-      if (id == this.id) {
-        var index = this.joinedUsers.indexOf(username);
-        var newUserList: string[] = [];
-        for (var i = 0; i < this.joinedUsers.length; i++) {
-          if (i != index) {
-            newUserList.push(this.joinedUsers[i]);
+      if (result != null) {
+        this.users = result;
+        this.users.forEach(u => {
+          if (u.connectedServerId == this.id) {
+            this.joinedUsers.push(u.username);
           }
-        }
-        index = this.users.findIndex(u => u.username == username);
-        if (index != null) {
-          var user = new User();
-          user.connectedServerId = "";
-          user.username = username;
-          this.users[index] = user;
-        }
-        this.joinedUsers = newUserList;
+        });
       }
     });
   }
