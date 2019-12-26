@@ -50,5 +50,6 @@ namespace MCServerWebWrapper.Server.Data.Models
 		public int QueryPort { get; set; }
 		public string RconPassword { get; set; }
 		public int RconPort { get; set; }
+        public bool AnnouncePlayerAchievements { get; set; }
 	}
 }

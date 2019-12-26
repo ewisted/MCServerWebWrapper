@@ -52,7 +52,7 @@ namespace MCServerWebWrapper.Server.Controllers
 				var server = await _repo.GetServerById(id);
 				var jarUri = await _jarService.GetJarUriFromVersion(version);
 				await _jarService.DownloadJar(id, jarUri, server.ServerPath);
-				server.ServerVersion = version.Id;
+				server.Version = version.Id;
 				await _repo.UpsertServer(server);
 			}
 			catch (Exception ex)

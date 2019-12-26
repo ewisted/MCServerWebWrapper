@@ -46,7 +46,7 @@ namespace MCServerWebWrapper.Server.Data
 		public async Task<IEnumerable<Output>> GetLogData(string id, int offset, int take)
 		{
 			var server = await GetServerById(id);
-			var logs = server.Logs.GetRange(offset, take);
+			var logs = server.Logs.ToList().GetRange(offset, take);
 			return logs;
 		}
 

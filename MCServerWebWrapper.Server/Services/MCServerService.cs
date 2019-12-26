@@ -59,7 +59,7 @@ namespace MCServerWebWrapper.Server.Services
 				IsRunning = false,
 				Name = name,
 				MaxRamMB = 2048,
-				MinRamMB = 2048,
+				InitRamMB = 2048,
 				TimesRan = 0,
 				Logs = new List<Output>(),
 				TotalUpTime = TimeSpan.Zero,
@@ -278,8 +278,8 @@ namespace MCServerWebWrapper.Server.Services
 
 				var dbServer = await _repo.GetServerById(server.ServerId);
 				dbServer.MaxRamMB = server.MaxRamMb;
-				dbServer.MinRamMB = server.MinRamMb;
-				dbServer.ProcessId = server.Server.Id;
+				dbServer.InitRamMB = server.MinRamMb;
+				dbServer.ContainerId = server.Server.Id;
 				dbServer.IsRunning = true;
 				dbServer.TimesRan++;
 				dbServer.DateLastStarted = DateTime.UtcNow;
@@ -302,7 +302,6 @@ namespace MCServerWebWrapper.Server.Services
 
 				var dbServer = await _repo.GetServerById(server.ServerId);
 				dbServer.IsRunning = false;
-				dbServer.ProcessId = null;
 				dbServer.DateLastStopped = DateTime.UtcNow;
 				dbServer.TotalUpTime = dbServer.TotalUpTime + (DateTime.UtcNow - dbServer.DateLastStarted);
 				await _repo.UpsertServer(dbServer);

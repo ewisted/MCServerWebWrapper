@@ -26,7 +26,7 @@ namespace MCServerWebWrapper.Test.UnitTests
 			IsRunning = false,
 			Name = "FooServer1",
 			MaxRamMB = 2048,
-			MinRamMB = 2048
+			InitRamMB = 2048
 		};
 
 		private static MinecraftServer fooServer2 = new MinecraftServer()
@@ -36,7 +36,7 @@ namespace MCServerWebWrapper.Test.UnitTests
 			IsRunning = false,
 			Name = "FooServer2",
 			MaxRamMB = 1024,
-			MinRamMB = 1024
+			InitRamMB = 1024
 		};
 
 		[Fact]
@@ -96,7 +96,7 @@ namespace MCServerWebWrapper.Test.UnitTests
 		{
 			// Arrange
 			await _repo.AddServer(fooServer1);
-			fooServer1.ServerVersion = "1.13.2";
+			fooServer1.Version = "1.13.2";
 
 			// Act
 			await _repo.UpsertServer(fooServer1);
@@ -105,7 +105,7 @@ namespace MCServerWebWrapper.Test.UnitTests
 
 			// Assert
 			Assert.NotNull(server);
-			Assert.Equal("1.13.2", server.ServerVersion);
+			Assert.Equal("1.13.2", server.Version);
 		}
 
 		public void Dispose()
