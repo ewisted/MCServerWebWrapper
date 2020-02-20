@@ -15,13 +15,13 @@ namespace MCServerWebWrapper.Server.Controllers
 	[Route("api/[controller]")]
 	public class MCServerController : Controller
 	{
-		private readonly MCServerService _serverService;
+		private readonly IServerManagementService _serverService;
 		private readonly ServerJarService _jarService;
 		private readonly IMapper _mapper;
 		private readonly IServerRepo _repo;
 		private readonly IUserRepo _userRepo;
 
-		public MCServerController(MCServerService serverService, ServerJarService jarService, IMapper mapper, IServerRepo repo, IUserRepo userRepo)
+		public MCServerController(IServerManagementService serverService, ServerJarService jarService, IMapper mapper, IServerRepo repo, IUserRepo userRepo)
 		{
 			_serverService = serverService;
 			_jarService = jarService;

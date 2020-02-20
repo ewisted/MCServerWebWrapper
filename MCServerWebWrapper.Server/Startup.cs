@@ -21,6 +21,7 @@ namespace MCServerWebWrapper
 		}
 
 		public IConfiguration Configuration { get; }
+		bool InDocker { get { return Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true"; } }
 
 		// This method gets called by the runtime. Use this method to add services to the container.
 		public void ConfigureServices(IServiceCollection services)
@@ -28,7 +29,18 @@ namespace MCServerWebWrapper
 			services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 			services.AddHttpClient();
 			services.AddSignalR();
-			services.AddSingleton<MCServerService>();
+			services.AddSingleton<IServerManagementService>(sp =>
+			{
+				switch (InDocker)
+				{
+					case true:
+						return sp.GetService<DockerService>();
+					case false:
+						return sp.GetService<ProcessService>();
+					default:
+						throw new InvalidOperationException("Could not determine runtime enviornment.");
+				}
+			});
 			services.AddSingleton<ServerJarService>();
 			services.AddTransient<IServerRepo, ServerMongoRepo>();
 			services.AddTransient<IUserRepo, UserMongoRepo>();
