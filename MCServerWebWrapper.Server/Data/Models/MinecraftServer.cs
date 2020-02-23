@@ -18,7 +18,8 @@ namespace MCServerWebWrapper.Server.Data.Models
         public int TimesRan { get; set; }
         public int PlayersCurrentlyConnected { get; set; }
         public IList<PlayerCountChange> PlayerCountChanges { get; set; }
-        public int ContainerId { get; set; }
+        public int ProcessId { get; set; }
+        public string ContainerId { get; set; }
         public int MaxRamMB { get; set; }
         public int InitRamMB { get; set; }
         public string ServerPath { get; set; }

@@ -133,16 +133,16 @@ namespace MCServerWebWrapper.Server.Services
 			return result;
 		}
 
-		public async Task StopServerById(string id)
+		public async Task<bool> StopServerById(string id)
 		{
 			var result = _runningServers.TryGetValue(id, out var server);
 			if (!result)
 			{
 				// TODO: Add error handling here
-				return;
+				return false;
 			}
 			await server.StopServer();
-			return;
+			return true;
 		}
 
 		public async Task SaveServerProperties(string id, ServerProperties properties)
@@ -279,7 +279,7 @@ namespace MCServerWebWrapper.Server.Services
 				var dbServer = await _repo.GetServerById(server.ServerId);
 				dbServer.MaxRamMB = server.MaxRamMb;
 				dbServer.InitRamMB = server.MinRamMb;
-				dbServer.ContainerId = server.Server.Id;
+				dbServer.ProcessId = server.Server.Id;
 				dbServer.IsRunning = true;
 				dbServer.TimesRan++;
 				dbServer.DateLastStarted = DateTime.UtcNow;

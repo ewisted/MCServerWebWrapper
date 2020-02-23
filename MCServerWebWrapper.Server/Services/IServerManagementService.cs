@@ -13,7 +13,7 @@ namespace MCServerWebWrapper.Server.Services
         Task<MinecraftServer> NewServer(string name);
         Task RemoveServer(string id);
         Task<bool> StartServerById(string id, int maxRamMB, int minRamMB);
-        Task StopServerById(string id);
+        Task<bool> StopServerById(string id);
         Task SaveServerProperties(string id, ServerProperties properties);
         Task SendConsoleInput(string serverId, string msg);
     }

@@ -83,7 +83,7 @@ namespace MCServerWebWrapper.Server.Models
 				});
 				return true;
 			}
-			catch (Exception ex)
+			catch (Exception)
 			{
 				return false;
 			}
@@ -98,11 +98,14 @@ namespace MCServerWebWrapper.Server.Models
 				};
 				OutputReceived.Invoke(ServerId, eArgs);
 
-				var result = Regex.IsMatch(args.Data, @".*\[[:0-9]{8}\] \[Server thread\/INFO\]: Done \([s.0-9]{6,8}\)! For help, type ""help"".*");
-				if (result)
+				if (!IsRunning)
 				{
-					IsRunning = true;
-					ServerStarted.Invoke(this, new EventArgs());
+					var result = Regex.IsMatch(args.Data, @".*\[[:0-9]{8}\] \[Server thread\/INFO\]: Done \([s.0-9]{6,8}\)! For help, type ""help"".*");
+					if (result)
+					{
+						IsRunning = true;
+						ServerStarted.Invoke(this, new EventArgs());
+					}
 				}
 			}
 		}
@@ -170,15 +173,5 @@ namespace MCServerWebWrapper.Server.Models
 			var time = DateTime.UtcNow - LastOutput.TimeStamp;
 			return time;
 		}
-	}
-
-	public class OutputReceivedEventArgs : EventArgs
-	{
-		public string Data { get; set; }
-	}
-
-	public class StatusUpdatedEventArgs : EventArgs
-	{
-		public StatusUpdate StatusUpdate { get; set; } 
 	}
 }
