@@ -16,7 +16,6 @@ namespace MCServerWebWrapper.Server.Models
     {
         public string ServerId { get; private set; }
         public string ContainerId { get; private set; }
-        public MultiplexedStream Stream { get; private set; }
         public Output LastOutput { get; private set; }
         public bool IsRunning { get; private set; }
 
@@ -25,44 +24,48 @@ namespace MCServerWebWrapper.Server.Models
         public event EventHandler ServerStarted;
         public event EventHandler ServerStopped;
 
-        private readonly CancellationTokenSource TokenSource = new CancellationTokenSource();
+        private readonly CancellationTokenSource TokenSource;
+        private readonly MultiplexedStream _stream;
+        private readonly Stream _stdin;
+        private readonly Stream _stdout;
+        private readonly Stream _stderr;
 
         public StreamManager(string serverId, string containerId, MultiplexedStream stream)
         {
             ServerId = serverId;
             ContainerId = containerId;
-            Stream = stream;
-            Task.Run(ReadOutput);
+            _stream = stream;
+            _stdin = new MemoryStream();
+            _stdout = new MemoryStream();
+            _stderr = new MemoryStream();
+            TokenSource = new CancellationTokenSource();
+            Task.Run(async () => await _stream.CopyOutputToAsync(_stdin, _stdout, _stderr, TokenSource.Token));
+            Task.Run(async () => await ReadOutput(TokenSource.Token));
+            Task.Run(async () => await ReadError(TokenSource.Token));
         }
 
-        private string _stdout;
-
-
-        private string stdout
+        private async Task ReadOutput(CancellationToken token)
         {
-            get { return _stdout; }
-            set 
+            using (StreamReader reader = new StreamReader(_stdout))
             {
-                _stdout = value;
-                ProcessOutput(_stdout);
+                while (!reader.EndOfStream && !token.IsCancellationRequested)
+                {
+                    var output = await reader.ReadLineAsync();
+                    ProcessOutput(output);
+                }
             }
         }
 
-        private string _stderr;
-
-        private string stderr
+        private async Task ReadError(CancellationToken token)
         {
-            get { return _stderr; }
-            set 
-            { 
-                _stderr = value;
-                ProcessError(_stderr);
+            using (StreamReader reader = new StreamReader(_stderr))
+            {
+                while (!reader.EndOfStream && !token.IsCancellationRequested)
+                {
+                    var error = await reader.ReadLineAsync();
+                    ProcessError(error);
+                }
             }
-        }
-
-        private async Task ReadOutput()
-        {
-            (stdout, stderr) = await Stream.ReadOutputToEndAsync(TokenSource.Token);
         }
 
         private void ProcessOutput(string output)
@@ -93,10 +96,19 @@ namespace MCServerWebWrapper.Server.Models
             ErrorReceived.Invoke(ServerId, eArgs);
         }
 
+        public Task SendInput(string msg)
+        {
+            using (StreamWriter writer = new StreamWriter(_stdin))
+            {
+                writer.WriteLine(msg);
+            }
+            return Task.CompletedTask;
+        }
+
         public void Dispose()
         {
             TokenSource.Cancel();
-            Stream.Dispose();
+            _stream.Dispose();
         }
     }
 }

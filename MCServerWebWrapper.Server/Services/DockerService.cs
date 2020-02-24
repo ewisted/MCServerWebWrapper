@@ -2,6 +2,7 @@
 using Docker.DotNet.Models;
 using MCServerWebWrapper.Server.Data;
 using MCServerWebWrapper.Server.Data.Models;
+using MCServerWebWrapper.Server.Extensions;
 using MCServerWebWrapper.Server.Hubs;
 using MCServerWebWrapper.Server.Models;
 using MCServerWebWrapper.Shared.SignalR;
@@ -79,14 +80,9 @@ namespace MCServerWebWrapper.Server.Services
             var properties = new ServerProperties();
             server.Properties = properties as Properties;
 
-            var parameters = new CreateContainerParameters
-            {
-                HostConfig = new HostConfig
-                {
-
-                }
-            };
-            var resp = await _docker.Containers.CreateContainerAsync(parameters);
+            // Create a container from the initial properties
+            var createParams = await server.GetContainerParametersAsync();
+            var resp = await _docker.Containers.CreateContainerAsync(createParams);
             server.ContainerId = resp.ID;
 
             // Add server to database
@@ -100,7 +96,7 @@ namespace MCServerWebWrapper.Server.Services
             var server = await _repo.GetServerById(id);
             if (server != null)
             {
-                if (await IsContainerRunning(server.ContainerId))
+                if (_runningServers.ContainsKey(server.Id))
                 {
                     await _docker.Containers.StopContainerAsync(server.ContainerId, new ContainerStopParameters { WaitBeforeKillSeconds = 5 });
                 }
@@ -115,17 +111,37 @@ namespace MCServerWebWrapper.Server.Services
                 Directory.Delete(serverPath, true);
                 await _repo.RemoveServer(id);
             }
+            return;
         }
 
-        public Task SaveServerProperties(string id, ServerProperties properties)
+        public async Task SaveServerProperties(string id, ServerProperties properties)
         {
-            
-            throw new NotImplementedException();
+            var server = await _repo.GetServerById(id);
+            if (server == null)
+            {
+                throw new Exception("Server not found.");
+            }
+
+            server.Properties = properties as Properties;
+            await _repo.UpsertServer(server);
+
+            var propertiesPath = Path.Combine(server.ServerPath, "server.properties");
+            if (File.Exists(propertiesPath))
+            {
+                await properties.Save(propertiesPath);
+            }
+            return;
         }
 
-        public Task SendConsoleInput(string serverId, string msg)
+        public async Task SendConsoleInput(string serverId, string msg)
         {
-            throw new NotImplementedException();
+            var result = _runningServers.TryGetValue(serverId, out var streamManager);
+            if (!result)
+            {
+                throw new Exception("Server is not currently running");
+            }
+            await streamManager.SendInput(msg);
+            return;
         }
 
         public async Task<bool> StartServerById(string id, int maxRamMB, int minRamMB)
@@ -136,16 +152,19 @@ namespace MCServerWebWrapper.Server.Services
                 // TODO: Add error handling here
                 return false;
             }
-            if (await IsContainerRunning(server.ContainerId))
+            if (_runningServers.ContainsKey(server.Id))
             {
                 // TODO: Add error handling here
                 return false;
             }
-            var parameters = new ContainerStartParameters
+            if (!string.IsNullOrWhiteSpace(server.ContainerId))
             {
-                DetachKeys = "ctrl-@"
-            };
-            var running = await _docker.Containers.StartContainerAsync(server.ContainerId, parameters);
+                await _docker.Containers.RemoveContainerAsync(server.ContainerId, new ContainerRemoveParameters { Force = true });
+            }
+
+            
+
+            var running = await _docker.Containers.StartContainerAsync(server.ContainerId, new ContainerStartParameters());
             if (running)
             {
                 var stream = await _docker.Containers.AttachContainerAsync(server.ContainerId, true, new ContainerAttachParameters
@@ -183,24 +202,6 @@ namespace MCServerWebWrapper.Server.Services
             }
 
             return await _docker.Containers.StopContainerAsync(server.ContainerId, new ContainerStopParameters { WaitBeforeKillSeconds = 5 });
-        }
-
-        private async Task<bool> IsContainerRunning(string containerId)
-        {
-            var containerParams = new ContainersListParameters() { Filters = new Dictionary<string, IDictionary<string, bool>>() };
-
-            var statusFilter = new Dictionary<string, bool>();
-            statusFilter.Add("running", true);
-
-            var idFilter = new Dictionary<string, bool>();
-            idFilter.Add(containerId, true);
-
-            containerParams.Filters.Add("status", statusFilter);
-            containerParams.Filters.Add("id", idFilter);
-
-            var containerSearchResult = (await _docker.Containers.ListContainersAsync(containerParams)).SingleOrDefault();
-
-            return containerSearchResult != null ? true : false;
         }
 
         private async Task HandleOutput(string serverId, string line)
