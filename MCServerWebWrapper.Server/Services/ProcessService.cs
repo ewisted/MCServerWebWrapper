@@ -25,8 +25,8 @@ namespace MCServerWebWrapper.Server.Services
 		private readonly ILogger<ProcessService> _logger;
 		//private static ConcurrentQueue<OutputData> _outputBuffer = 
 		//	new ConcurrentQueue<OutputData>();
-		private static readonly ConcurrentDictionary<string, ServerProcess> _runningServers = 
-			new ConcurrentDictionary<string, ServerProcess>();
+		private static readonly ConcurrentDictionary<string, JavaServerProcess> _runningServers = 
+			new ConcurrentDictionary<string, JavaServerProcess>();
 		private readonly IServerRepo _repo;
 		private readonly IUserRepo _userRepo;
 
@@ -44,7 +44,7 @@ namespace MCServerWebWrapper.Server.Services
 			return logs;
 		}
 
-		public async Task<MinecraftServer> NewServer(string name)
+		public async Task<JavaServer> NewServer(string name)
 		{
 			var server = await _repo.GetServerByName(name);
 			if (server != null)
@@ -52,7 +52,7 @@ namespace MCServerWebWrapper.Server.Services
 				// TODO: Add better error handling here
 				throw new Exception("Server already exists");
 			}
-			server = new MinecraftServer()
+			server = new JavaServer()
 			{
 				Id = ObjectId.GenerateNewId().ToString(),
 				DateCreated = DateTime.UtcNow,
@@ -82,8 +82,8 @@ namespace MCServerWebWrapper.Server.Services
 			File.Copy(newEulaPath, eulaPath, true);
 
 			// Set server properties of db object
-			var properties = new ServerProperties();
-			server.Properties = properties as Properties;
+			var properties = new JavaServerProperties();
+			server.Properties = properties as JavaProperties;
 
 			// Add server to database
 			await _repo.AddServer(server);
@@ -118,7 +118,7 @@ namespace MCServerWebWrapper.Server.Services
 				return false;
 			}
 
-			var serverProcess = new ServerProcess(server.Id, maxRamMB, minRamMB);
+			var serverProcess = new JavaServerProcess(server.Id, maxRamMB, minRamMB);
 			serverProcess.OutputReceived += s_OutputReceived;
 			serverProcess.StatusUpdated += s_StatusUpdated;
 			serverProcess.ServerStarted += s_ServerStarted;
@@ -145,7 +145,7 @@ namespace MCServerWebWrapper.Server.Services
 			return true;
 		}
 
-		public async Task SaveServerProperties(string id, ServerProperties properties)
+		public async Task SaveServerProperties(string id, JavaServerProperties properties)
 		{
 			var server = await _repo.GetServerById(id);
 			if (server == null)
@@ -159,7 +159,7 @@ namespace MCServerWebWrapper.Server.Services
 
 			try
 			{
-				server.Properties = properties as Properties;
+				server.Properties = properties as JavaProperties;
 				await _repo.UpsertServer(server);
 
 				await properties.Save(Path.Combine(server.ServerPath, "server.properties"));
@@ -272,9 +272,9 @@ namespace MCServerWebWrapper.Server.Services
 
 		private async void s_ServerStarted(object sender, EventArgs args)
 		{
-			if (sender.GetType() == typeof(ServerProcess))
+			if (sender.GetType() == typeof(JavaServerProcess))
 			{
-				var server = (ServerProcess)sender;
+				var server = (JavaServerProcess)sender;
 
 				var dbServer = await _repo.GetServerById(server.ServerId);
 				dbServer.MaxRamMB = server.MaxRamMb;
@@ -291,9 +291,9 @@ namespace MCServerWebWrapper.Server.Services
 
 		private async void s_ServerStopped(object sender, EventArgs args)
 		{
-			if (sender.GetType() == typeof(ServerProcess))
+			if (sender.GetType() == typeof(JavaServerProcess))
 			{
-				var server = (ServerProcess)sender;
+				var server = (JavaServerProcess)sender;
 				server.OutputReceived -= s_OutputReceived;
 				server.StatusUpdated -= s_StatusUpdated;
 				server.ServerStarted -= s_ServerStarted;

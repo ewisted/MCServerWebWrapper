@@ -29,18 +29,19 @@ namespace MCServerWebWrapper
 			services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 			services.AddHttpClient();
 			services.AddSignalR();
-			services.AddSingleton<IServerManagementService>(sp =>
-			{
-				switch (InDocker)
-				{
-					case true:
-						return sp.GetService<DockerService>();
-					case false:
-						return sp.GetService<ProcessService>();
-					default:
-						throw new InvalidOperationException("Could not determine runtime enviornment.");
-				}
-			});
+			//services.AddSingleton<IServerManagementService>(sp =>
+			//{
+			//	switch (InDocker)
+			//	{
+			//		case true:
+			//			return sp.GetService<DockerService>();
+			//		case false:
+			//			return sp.GetService<ProcessService>();
+			//		default:
+			//			throw new InvalidOperationException("Could not determine runtime enviornment.");
+			//	}
+			//});
+			services.AddSingleton<IServerManagementService, DockerService>();
 			services.AddSingleton<ServerJarService>();
 			services.AddTransient<IServerRepo, ServerMongoRepo>();
 			services.AddTransient<IUserRepo, UserMongoRepo>();

@@ -63,7 +63,7 @@ namespace MCServerWebWrapper.Server.Controllers
 		}
 
 		[HttpPost("[action]")]
-		public async Task<IActionResult> SaveServerProperties([Required] string id, [FromBody] ServerProperties properties)
+		public async Task<IActionResult> SaveServerProperties([Required] string id, [FromBody] JavaServerProperties properties)
 		{
 			if (properties == null)
 			{

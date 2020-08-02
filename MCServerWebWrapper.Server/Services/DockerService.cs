@@ -7,6 +7,7 @@ using MCServerWebWrapper.Server.Hubs;
 using MCServerWebWrapper.Server.Models;
 using MCServerWebWrapper.Shared.SignalR;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using System;
@@ -30,17 +31,36 @@ namespace MCServerWebWrapper.Server.Services
             new ConcurrentDictionary<string, StreamManager>();
         private readonly IUserRepo _userRepo;
         private readonly DockerClient _docker;
+        private readonly IConfigurationSection _dockerHubConfig;
 
-        public DockerService(IHubContext<AngularHub> angularHub, ILogger<DockerService> logger, IServerRepo repo, IUserRepo userRepo)
+        public DockerService(IHubContext<AngularHub> angularHub, ILogger<DockerService> logger, IServerRepo repo, IUserRepo userRepo, IConfiguration config)
         {
             _angularHub = angularHub;
             _logger = logger;
             _repo = repo;
             _userRepo = userRepo;
+            _dockerHubConfig = config.GetSection("DockerHub");
             string dockerEndpoint = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
                 ? "npipe://./pipe/docker_engine"
                 : "unix:///var/run/docker.sock";
             _docker = new DockerClientConfiguration(new Uri(dockerEndpoint)).CreateClient();
+            Task.Run(async () => await EnsureMCImageExists());
+        }
+
+        public async Task EnsureMCImageExists()
+        {
+            await _docker.Images.CreateImageAsync(
+                new ImagesCreateParameters
+                {
+                    Repo = "itzg/minecraft-server"
+                },
+                new AuthConfig
+                {
+                    Username = _dockerHubConfig["Username"],
+                    Password = _dockerHubConfig["AccessToken"]
+                },
+                new Progress<JSONMessage>()
+            );
         }
 
         public async Task<IEnumerable<Output>> GetCurrentOutput(string serverId, TimeSpan timeFrame)
@@ -49,7 +69,7 @@ namespace MCServerWebWrapper.Server.Services
             return logs;
         }
 
-        public async Task<MinecraftServer> NewServer(string name)
+        public async Task<JavaServer> NewServer(string name)
         {
             var server = await _repo.GetServerByName(name);
             if (server != null)
@@ -57,7 +77,7 @@ namespace MCServerWebWrapper.Server.Services
                 // TODO: Add better error handling here
                 throw new Exception("Server already exists");
             }
-            server = new MinecraftServer()
+            server = new JavaServer()
             {
                 Id = ObjectId.GenerateNewId().ToString(),
                 DateCreated = DateTime.UtcNow,
@@ -69,6 +89,7 @@ namespace MCServerWebWrapper.Server.Services
                 Logs = new List<Output>(),
                 TotalUpTime = TimeSpan.Zero,
                 PlayerCountChanges = new List<PlayerCountChange>(),
+                Operators = new List<string>()
             };
 
             // Build the server path
@@ -77,13 +98,20 @@ namespace MCServerWebWrapper.Server.Services
             server.ServerPath = serverDirectory.FullName;
 
             // Set server properties of db object
-            var properties = new ServerProperties();
-            server.Properties = properties as Properties;
+            var properties = new JavaServerProperties();
+            server.Properties = properties as JavaProperties;
 
-            // Create a container from the initial properties
-            var createParams = await server.GetContainerParametersAsync();
-            var resp = await _docker.Containers.CreateContainerAsync(createParams);
-            server.ContainerId = resp.ID;
+            try
+            {
+                // Create a container from the initial properties
+                var createParams = await server.GetContainerParametersAsync();
+                var resp = await _docker.Containers.CreateContainerAsync(createParams);
+                server.ContainerId = resp.ID;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
 
             // Add server to database
             await _repo.AddServer(server);
@@ -114,7 +142,7 @@ namespace MCServerWebWrapper.Server.Services
             return;
         }
 
-        public async Task SaveServerProperties(string id, ServerProperties properties)
+        public async Task SaveServerProperties(string id, JavaServerProperties properties)
         {
             var server = await _repo.GetServerById(id);
             if (server == null)
@@ -122,7 +150,7 @@ namespace MCServerWebWrapper.Server.Services
                 throw new Exception("Server not found.");
             }
 
-            server.Properties = properties as Properties;
+            server.Properties = properties as JavaProperties;
             await _repo.UpsertServer(server);
 
             var propertiesPath = Path.Combine(server.ServerPath, "server.properties");
@@ -294,9 +322,9 @@ namespace MCServerWebWrapper.Server.Services
 
         private async void s_ServerStarted(object sender, EventArgs args)
         {
-            if (sender.GetType() == typeof(ServerProcess))
+            if (sender.GetType() == typeof(JavaServerProcess))
             {
-                var server = (ServerProcess)sender;
+                var server = (JavaServerProcess)sender;
 
                 var dbServer = await _repo.GetServerById(server.ServerId);
                 dbServer.MaxRamMB = server.MaxRamMb;

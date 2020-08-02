@@ -19,7 +19,7 @@ namespace MCServerWebWrapper.Test.UnitTests
 
 		// Arrange
 		// Setup a couple dummy servers to use for test data
-		private static MinecraftServer fooServer1 = new MinecraftServer()
+		private static JavaServer fooServer1 = new JavaServer()
 		{
 			Id = ObjectId.GenerateNewId().ToString(),
 			DateCreated = DateTime.UtcNow,
@@ -29,7 +29,7 @@ namespace MCServerWebWrapper.Test.UnitTests
 			InitRamMB = 2048
 		};
 
-		private static MinecraftServer fooServer2 = new MinecraftServer()
+		private static JavaServer fooServer2 = new JavaServer()
 		{
 			Id = ObjectId.GenerateNewId().ToString(),
 			DateCreated = DateTime.UtcNow,

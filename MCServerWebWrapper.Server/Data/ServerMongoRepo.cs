@@ -11,12 +11,12 @@ namespace MCServerWebWrapper.Server.Data
 {
 	public class ServerMongoRepo : IServerRepo
 	{
-		private readonly IMongoCollection<MinecraftServer> _servers;
+		private readonly IMongoCollection<JavaServer> _servers;
 		public ServerMongoRepo(IConfiguration config)
 		{
 			var client = new MongoClient(config.GetConnectionString("MCServerDb"));
 			var database = client.GetDatabase(config.GetValue<string>("DbName"));
-			_servers = database.GetCollection<MinecraftServer>("MinecraftServers");
+			_servers = database.GetCollection<JavaServer>("MinecraftServers");
 		}
 		
 		// This constructor is used for unit testing only
@@ -24,15 +24,15 @@ namespace MCServerWebWrapper.Server.Data
 		{
 			var client = new MongoClient(connectionString);
 			var database = client.GetDatabase(databaseString);
-			_servers = database.GetCollection<MinecraftServer>("MinecraftServers");
+			_servers = database.GetCollection<JavaServer>("MinecraftServers");
 		}
 
-		public IQueryable<MinecraftServer> GetServers()
+		public IQueryable<JavaServer> GetServers()
 		{
 			return _servers.AsQueryable().OrderBy(s => s.Name);
 		}
 
-		public IQueryable<MinecraftServer> GetServers(int offset, int take)
+		public IQueryable<JavaServer> GetServers(int offset, int take)
 		{
 			return GetServers().Skip(offset).Take(take);
 		}
@@ -57,13 +57,13 @@ namespace MCServerWebWrapper.Server.Data
 			return logs;
 		}
 
-		public Task<MinecraftServer> GetServerById(string id)
+		public Task<JavaServer> GetServerById(string id)
 		{
 			var server = _servers.AsQueryable().Where(s => s.Id == id).FirstOrDefault();
 			return Task.FromResult(server);
 		}
 
-		public Task<MinecraftServer> GetServerByName(string name)
+		public Task<JavaServer> GetServerByName(string name)
 		{
 			var server = _servers.AsQueryable().Where(s => s.Name == name).FirstOrDefault();
 			return Task.FromResult(server);
@@ -73,7 +73,7 @@ namespace MCServerWebWrapper.Server.Data
 		{
 			await _servers.FindOneAndUpdateAsync(
 				s => s.Id == id, 
-				Builders<MinecraftServer>.Update.Push(
+				Builders<JavaServer>.Update.Push(
 					c => c.Logs,
 					output));
 			return;
@@ -83,13 +83,13 @@ namespace MCServerWebWrapper.Server.Data
 		{
 			await _servers.FindOneAndUpdateAsync(
 				s => s.Id == id,
-				Builders<MinecraftServer>.Update.Push(
+				Builders<JavaServer>.Update.Push(
 					c => c.PlayerCountChanges,
 					change));
 			return;
 		}
 
-		public async Task<bool> AddServer(MinecraftServer server)
+		public async Task<bool> AddServer(JavaServer server)
 		{
 			var tryGetServer = await GetServerByName(server.Name);
 			if (tryGetServer != null)
@@ -114,7 +114,7 @@ namespace MCServerWebWrapper.Server.Data
 			}
 		}
 
-		public async Task<bool> UpsertServer(MinecraftServer server)
+		public async Task<bool> UpsertServer(JavaServer server)
 		{
 			var result = await _servers.ReplaceOneAsync(s => s.Id == server.Id, server);
 			if (result.ModifiedCount > 0)

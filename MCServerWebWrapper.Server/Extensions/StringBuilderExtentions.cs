@@ -11,7 +11,7 @@ namespace MCServerWebWrapper.Server.Extensions
     {
         private const string T2 = "\t\t";
         private const string T3 = "\t\t\t";
-        public static StringBuilder AppendServerConfig(this StringBuilder sb, MinecraftServer server)
+        public static StringBuilder AppendServerConfig(this StringBuilder sb, JavaServer server)
         {
             
             sb.AppendLine(T2 + $"container_name: {server.Name}");
@@ -28,13 +28,13 @@ namespace MCServerWebWrapper.Server.Extensions
             return sb;
         }
 
-        private static StringBuilder AppendServerEnvVariables(this StringBuilder sb, MinecraftServer server)
+        private static StringBuilder AppendServerEnvVariables(this StringBuilder sb, JavaServer server)
         {
             sb.AppendLine(T3 + $"TYPE: {server.Type}");
-            foreach (var envVar in server.TypeSpecificEnvVariables)
-            {
-                sb.AppendLine(T3 + $"{envVar.Key}: {envVar.Value}");
-            }
+            //foreach (var envVar in server.TypeSpecificEnvVariables)
+            //{
+            //    sb.AppendLine(T3 + $"{envVar.Key}: {envVar.Value}");
+            //}
             sb.AppendLine(T3 + "EULA: 'TRUE'");
             sb.AppendLine(T3 + $"SERVER_NAME: {server.Name}");
             sb.AppendLine(T3 + "SERVER_PORT: 25565");

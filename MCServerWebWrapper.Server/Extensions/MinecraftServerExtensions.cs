@@ -9,7 +9,7 @@ namespace MCServerWebWrapper.Server.Extensions
 {
     public static class MinecraftServerExtensions
     {
-        public static Task<CreateContainerParameters> GetContainerParametersAsync(this MinecraftServer server)
+        public static Task<CreateContainerParameters> GetContainerParametersAsync(this JavaServer server)
         {
             var parameters = new CreateContainerParameters
             {
@@ -17,7 +17,6 @@ namespace MCServerWebWrapper.Server.Extensions
                 {
                     RestartPolicy = new RestartPolicy
                     {
-                        MaximumRetryCount = 3,
                         Name = RestartPolicyKind.UnlessStopped
                     },
                     PortBindings = GetPortBindings(server.Properties.ServerPort.ToString()),
@@ -62,14 +61,14 @@ namespace MCServerWebWrapper.Server.Extensions
             return volBinds;
         }
 
-        private static IList<string> GetServerEnvVariables(MinecraftServer server)
+        private static IList<string> GetServerEnvVariables(JavaServer server)
         {
             var env = new List<string>();
-            env.Add($"TYPE={server.Type}");
-            foreach (var envVar in server.TypeSpecificEnvVariables)
-            {
-                env.Add($"{envVar.Key}={envVar.Value}");
-            }
+            if (!string.IsNullOrWhiteSpace(server.Type)) env.Add($"TYPE={server.Type}");
+            //foreach (var envVar in server.TypeSpecificEnvVariables)
+            //{
+            //    env.Add($"{envVar.Key}={envVar.Value}");
+            //}
             env.Add("EULA='TRUE'");
             env.Add($"SERVER_NAME={server.Name}");
             env.Add("SERVER_PORT=25565");

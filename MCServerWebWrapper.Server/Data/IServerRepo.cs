@@ -8,17 +8,17 @@ namespace MCServerWebWrapper.Server.Data
 {
 	public interface IServerRepo
 	{
-		IQueryable<MinecraftServer> GetServers();
-		IQueryable<MinecraftServer> GetServers(int offset, int take);
+		IQueryable<JavaServer> GetServers();
+		IQueryable<JavaServer> GetServers(int offset, int take);
 		Task<IEnumerable<Output>> GetLogData(string id);
 		Task<IEnumerable<Output>> GetLogData(string id, int offset, int take);
 		Task<IEnumerable<Output>> GetLogData(string id, DateTime from, DateTime to);
-		Task<MinecraftServer> GetServerById(string id);
-		Task<MinecraftServer> GetServerByName(string name);
+		Task<JavaServer> GetServerById(string id);
+		Task<JavaServer> GetServerByName(string name);
 		Task AddLogDataByServerId(string id, Output output);
 		Task AddPlayerCountDataByServerId(string id, PlayerCountChange change);
-		Task<bool> AddServer(MinecraftServer server);
+		Task<bool> AddServer(JavaServer server);
 		Task<bool> RemoveServer(string id);
-		Task<bool> UpsertServer(MinecraftServer server);
+		Task<bool> UpsertServer(JavaServer server);
 	}
 }

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace MCServerWebWrapper.Server.Models
 {
-    public static class ServerTypes
+    public static class JavaServerTypes
     {
         public const string Forge = "FORGE";
         public const string Bukkit = "Bukkit";
