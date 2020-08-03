@@ -1,4 +1,5 @@
 ﻿using Docker.DotNet;
+using Docker.DotNet.Models;
 using MCServerWebWrapper.Server.Data.Models;
 using System;
 using System.Collections.Generic;
@@ -17,41 +18,63 @@ namespace MCServerWebWrapper.Server.Models
         public string ServerId { get; private set; }
         public string ContainerId { get; private set; }
         public Output LastOutput { get; private set; }
-        public bool IsRunning { get; private set; }
+        public CancellationToken Token { get; }
+        public Progress<ContainerStatsResponse> StatProgress { get; }
 
         public event EventHandler<OutputReceivedEventArgs> OutputReceived;
         public event EventHandler<OutputReceivedEventArgs> ErrorReceived;
-        public event EventHandler ServerStarted;
-        public event EventHandler ServerStopped;
+        public event EventHandler<StatusUpdatedEventArgs> StatUpdateReceived;
+        
 
-        private readonly CancellationTokenSource TokenSource;
+        private readonly CancellationTokenSource _tokenSource;
         private readonly MultiplexedStream _stream;
         private readonly Stream _stdin;
         private readonly Stream _stdout;
         private readonly Stream _stderr;
 
-        public StreamManager(string serverId, string containerId, MultiplexedStream stream)
+        public StreamManager(string serverId, string containerId, MultiplexedStream stream, CancellationTokenSource tokenSource = null)
         {
             ServerId = serverId;
             ContainerId = containerId;
             _stream = stream;
+            _tokenSource = tokenSource != null ? tokenSource : new CancellationTokenSource();
             _stdin = new MemoryStream();
             _stdout = new MemoryStream();
             _stderr = new MemoryStream();
-            TokenSource = new CancellationTokenSource();
-            Task.Run(async () => await _stream.CopyOutputToAsync(_stdin, _stdout, _stderr, TokenSource.Token));
-            Task.Run(async () => await ReadOutput(TokenSource.Token));
-            Task.Run(async () => await ReadError(TokenSource.Token));
+            StatProgress = new Progress<ContainerStatsResponse>();
+            StatProgress.ProgressChanged += OnProcessStatistics;
+            InitializeState();
+        }
+
+        public async void InitializeState()
+        {
+            Task.Run(async () => await _stream.CopyOutputToAsync(_stdin, _stdout, _stderr, _tokenSource.Token));
+            Task.Run(async () => await ReadOutput(_tokenSource.Token));
+            Task.Run(async () => await ReadError(_tokenSource.Token));
         }
 
         private async Task ReadOutput(CancellationToken token)
         {
             using (StreamReader reader = new StreamReader(_stdout))
             {
-                while (!reader.EndOfStream && !token.IsCancellationRequested)
+                long lastPosition = 0;
+                while (!token.IsCancellationRequested)
                 {
-                    var output = await reader.ReadLineAsync();
-                    ProcessOutput(output);
+                    try
+                    {
+                        if (_stdout.Position == _stdout.Length)
+                        {
+                            _stdout.Position = lastPosition;
+                        }
+                        var output = await reader.ReadLineAsync();
+                        if (!string.IsNullOrWhiteSpace(output))
+                        {
+                            lastPosition = _stdout.Position;
+                            ProcessOutput(output);
+                        }
+                        await Task.Delay(100);
+                    }
+                    catch { }
                 }
             }
         }
@@ -60,10 +83,24 @@ namespace MCServerWebWrapper.Server.Models
         {
             using (StreamReader reader = new StreamReader(_stderr))
             {
-                while (!reader.EndOfStream && !token.IsCancellationRequested)
+                long lastPosition = 0;
+                while (!token.IsCancellationRequested)
                 {
-                    var error = await reader.ReadLineAsync();
-                    ProcessError(error);
+                    try
+                    {
+                        if (_stderr.Position == _stderr.Length)
+                        {
+                            _stderr.Position = lastPosition;
+                        }
+                        var error = await reader.ReadLineAsync();
+                        if (!string.IsNullOrWhiteSpace(error))
+                        {
+                            lastPosition = _stderr.Position;
+                            ProcessError(error);
+                        }
+                        await Task.Delay(100);
+                    }
+                    catch { }
                 }
             }
         }
@@ -75,16 +112,6 @@ namespace MCServerWebWrapper.Server.Models
                 Data = output,
             };
             OutputReceived.Invoke(ServerId, eArgs);
-
-            if (!IsRunning)
-            {
-                var result = Regex.IsMatch(output, @".*\[[:0-9]{8}\] \[Server thread\/INFO\]: Done \([s.0-9]{6,8}\)! For help, type ""help"".*");
-                if (result)
-                {
-                    IsRunning = true;
-                    ServerStarted.Invoke(this, new EventArgs());
-                }
-            }
         }
 
         private void ProcessError(string error)
@@ -94,6 +121,11 @@ namespace MCServerWebWrapper.Server.Models
                 Data = error,
             };
             ErrorReceived.Invoke(ServerId, eArgs);
+        }
+
+        private void OnProcessStatistics(object sender, ContainerStatsResponse response)
+        {
+
         }
 
         public Task SendInput(string msg)
@@ -107,7 +139,7 @@ namespace MCServerWebWrapper.Server.Models
 
         public void Dispose()
         {
-            TokenSource.Cancel();
+            _tokenSource.Cancel();
             _stream.Dispose();
         }
     }

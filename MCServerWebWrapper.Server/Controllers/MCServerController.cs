@@ -114,8 +114,15 @@ namespace MCServerWebWrapper.Server.Controllers
 		[HttpGet("[action]")]
 		public async Task<IActionResult> StopServer([Required] string id)
 		{
-			await _serverService.StopServerById(id);
-			return Ok();
+			var result = await _serverService.StopServerById(id);
+			if (result)
+            {
+				return Ok();
+			}
+			else
+            {
+				return StatusCode(500);
+            }
 		}
 
 		[HttpGet("[action]")]

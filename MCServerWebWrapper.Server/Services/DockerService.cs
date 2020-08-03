@@ -18,6 +18,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MCServerWebWrapper.Server.Services
@@ -101,18 +102,6 @@ namespace MCServerWebWrapper.Server.Services
             var properties = new JavaServerProperties();
             server.Properties = properties as JavaProperties;
 
-            try
-            {
-                // Create a container from the initial properties
-                var createParams = await server.GetContainerParametersAsync();
-                var resp = await _docker.Containers.CreateContainerAsync(createParams);
-                server.ContainerId = resp.ID;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex);
-            }
-
             // Add server to database
             await _repo.AddServer(server);
 
@@ -127,13 +116,13 @@ namespace MCServerWebWrapper.Server.Services
                 if (_runningServers.ContainsKey(server.Id))
                 {
                     await _docker.Containers.StopContainerAsync(server.ContainerId, new ContainerStopParameters { WaitBeforeKillSeconds = 5 });
+                    await _docker.Containers.RemoveContainerAsync(server.ContainerId, new ContainerRemoveParameters
+                    {
+                        Force = true,
+                        RemoveLinks = true,
+                        RemoveVolumes = true
+                    });
                 }
-                await _docker.Containers.RemoveContainerAsync(server.ContainerId, new ContainerRemoveParameters
-                {
-                    Force = true,
-                    RemoveLinks = true,
-                    RemoveVolumes = true
-                });
                 var buildPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
                 var serverPath = Path.Combine(buildPath, id);
                 Directory.Delete(serverPath, true);
@@ -187,14 +176,30 @@ namespace MCServerWebWrapper.Server.Services
             }
             if (!string.IsNullOrWhiteSpace(server.ContainerId))
             {
-                await _docker.Containers.RemoveContainerAsync(server.ContainerId, new ContainerRemoveParameters { Force = true });
+                try
+                {
+                    await _docker.Containers.RemoveContainerAsync(server.ContainerId, new ContainerRemoveParameters
+                    {
+                        Force = true,
+                        RemoveLinks = true,
+                        RemoveVolumes = true
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex);
+                }
             }
 
-            
+            var createParams = await server.GetContainerParametersAsync();
+            var resp = await _docker.Containers.CreateContainerAsync(createParams);
+            server.ContainerId = resp.ID;
 
             var running = await _docker.Containers.StartContainerAsync(server.ContainerId, new ContainerStartParameters());
             if (running)
             {
+                //var containers = await _docker.Containers.ListContainersAsync(new ContainersListParameters { All = true });
+
                 var stream = await _docker.Containers.AttachContainerAsync(server.ContainerId, true, new ContainerAttachParameters
                 {
                     DetachKeys = "ctrl-@",
@@ -204,17 +209,26 @@ namespace MCServerWebWrapper.Server.Services
                     Stream = true
                 });
 
-                var manager = new StreamManager(server.Id, server.ContainerId, stream);
+                var tokenSource = new CancellationTokenSource();
+                var manager = new StreamManager(server.Id, server.ContainerId, stream, tokenSource);
                 manager.OutputReceived += s_OutputReceived;
-                //manager.StatusUpdated += s_StatusUpdated;
-                manager.ServerStarted += s_ServerStarted;
-                manager.ServerStopped += s_ServerStopped;
+                manager.StatUpdateReceived += s_StatusUpdated;
+
+                Task.Run(async () => await _docker.Containers.GetContainerStatsAsync(server.ContainerId, new ContainerStatsParameters { Stream = true }, manager.StatProgress, tokenSource.Token));
 
                 _runningServers.AddOrUpdate(server.Id, manager, (key, oldValue) =>
                 {
                     oldValue.Dispose();
                     return manager;
                 });
+
+                server.MaxRamMB = maxRamMB;
+                server.InitRamMB = minRamMB;
+                server.IsRunning = true;
+                server.TimesRan++;
+                server.DateLastStarted = DateTime.UtcNow;
+                await _repo.UpsertServer(server);
+                await _angularHub.Clients.All.SendAsync(SignalrMethodNames.ServerStarted, server.Id);
             }
 
             return running;
@@ -229,7 +243,27 @@ namespace MCServerWebWrapper.Server.Services
                 return false;
             }
 
-            return await _docker.Containers.StopContainerAsync(server.ContainerId, new ContainerStopParameters { WaitBeforeKillSeconds = 5 });
+            try
+            {
+                await _docker.Containers.StopContainerAsync(server.ContainerId, new ContainerStopParameters { WaitBeforeKillSeconds = 5 });
+                await _docker.Containers.RemoveContainerAsync(server.ContainerId, new ContainerRemoveParameters { Force = true });
+                server.ContainerId = null;
+                await _repo.UpsertServer(server);
+                _runningServers.TryRemove(id, out var manager);
+                manager.Dispose();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                return false;
+            }
+
+            server.IsRunning = false;
+            server.DateLastStopped = DateTime.UtcNow;
+            server.TotalUpTime = server.TotalUpTime + (DateTime.UtcNow - server.DateLastStarted);
+            await _repo.UpsertServer(server);
+            await _angularHub.Clients.All.SendAsync(SignalrMethodNames.ServerStopped, server.Id);
+            return true;
         }
 
         private async Task HandleOutput(string serverId, string line)
@@ -317,45 +351,6 @@ namespace MCServerWebWrapper.Server.Services
                 _logger.Log(LogLevel.Information, args.Data);
                 await _angularHub.Clients.All.SendAsync(SignalrMethodNames.ServerOutput, serverId, args.Data);
                 await HandleOutput(serverId, args.Data);
-            }
-        }
-
-        private async void s_ServerStarted(object sender, EventArgs args)
-        {
-            if (sender.GetType() == typeof(JavaServerProcess))
-            {
-                var server = (JavaServerProcess)sender;
-
-                var dbServer = await _repo.GetServerById(server.ServerId);
-                dbServer.MaxRamMB = server.MaxRamMb;
-                dbServer.InitRamMB = server.MinRamMb;
-                dbServer.ProcessId = server.Server.Id;
-                dbServer.IsRunning = true;
-                dbServer.TimesRan++;
-                dbServer.DateLastStarted = DateTime.UtcNow;
-                await _repo.UpsertServer(dbServer);
-
-                await _angularHub.Clients.All.SendAsync(SignalrMethodNames.ServerStarted, server.ServerId);
-            }
-        }
-
-        private async void s_ServerStopped(object sender, EventArgs args)
-        {
-            if (sender.GetType() == typeof(StreamManager))
-            {
-                var server = (StreamManager)sender;
-                server.OutputReceived -= s_OutputReceived;
-                //server.StatusUpdated -= s_StatusUpdated;
-                server.ServerStarted -= s_ServerStarted;
-                server.ServerStopped -= s_ServerStopped;
-                _runningServers.TryRemove(server.ServerId, out server);
-
-                var dbServer = await _repo.GetServerById(server.ServerId);
-                dbServer.IsRunning = false;
-                dbServer.DateLastStopped = DateTime.UtcNow;
-                dbServer.TotalUpTime = dbServer.TotalUpTime + (DateTime.UtcNow - dbServer.DateLastStarted);
-                await _repo.UpsertServer(dbServer);
-                await _angularHub.Clients.All.SendAsync(SignalrMethodNames.ServerStopped, server.ServerId);
             }
         }
 

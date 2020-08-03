@@ -90,12 +90,21 @@ export class ServerComponent implements OnInit {
       setTimeout(() => {
         this.scrollOutputToBottom();
       }, 10);
-      this._http.get(this._baseUrl + `api/MCServer/StartServer?id=${this.serverId}&maxRamMB=${this.maxRam}&minRamMB=${this.minRam}`).subscribe(error => console.error(error));
+      this._http.get(this._baseUrl + `api/MCServer/StartServer?id=${this.serverId}&maxRamMB=${this.maxRam}&minRamMB=${this.minRam}`).subscribe(() => {
+        this.currentServer.dateLastStarted = new Date();
+        this.isRunning = true;
+      }, error => console.error(error));
     }
   }
 
   stopServer() {
-    this._http.get(this._baseUrl + `api/MCServer/StopServer?id=${this.serverId}`).subscribe(error => console.error(error));
+    this._http.get(this._baseUrl + `api/MCServer/StopServer?id=${this.serverId}`).subscribe(() => {
+      this.currentServer.dateLastStopped = new Date();
+      this.isRunning = false;
+      this.cpuPointsString = null;
+      this.ramPointsString = null;
+      this.upTimeThisSession = null;
+    }, error => console.error(error));
   }
 
   removeServer() {

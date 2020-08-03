@@ -14,10 +14,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "external", "external", "{F443B5B8-2907-4D43-8034-7BC0B53EE931}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Docker.DotNet", "external\Docker.DotNet\Docker.DotNet.csproj", "{7490CA5B-C6DD-486E-B469-7430BF1C6DA6}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,16 +32,9 @@ Global
 		{AA46CA3E-7006-4D76-9BCD-0E9628EA2302}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AA46CA3E-7006-4D76-9BCD-0E9628EA2302}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AA46CA3E-7006-4D76-9BCD-0E9628EA2302}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7490CA5B-C6DD-486E-B469-7430BF1C6DA6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7490CA5B-C6DD-486E-B469-7430BF1C6DA6}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7490CA5B-C6DD-486E-B469-7430BF1C6DA6}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7490CA5B-C6DD-486E-B469-7430BF1C6DA6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{7490CA5B-C6DD-486E-B469-7430BF1C6DA6} = {F443B5B8-2907-4D43-8034-7BC0B53EE931}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4C627749-E12D-4F30-B4ED-903A35DC1E4A}
