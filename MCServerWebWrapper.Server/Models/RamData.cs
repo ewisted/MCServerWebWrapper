@@ -9,7 +9,7 @@ namespace MCServerWebWrapper.Server.Models
 	{
 		public List<int> RamLogs { get; set; }
 		private List<int> xValues { get; set; }
-		private int MaxRamMB { get; set; }
+		public int MaxRamMB { get; set; }
 
 		public RamData(int maxRamMB)
 		{

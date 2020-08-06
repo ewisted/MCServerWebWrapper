@@ -10,6 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -19,6 +20,10 @@ namespace MCServerWebWrapper.Server.Services
 	{
 		private readonly IHttpClientFactory _clientFactory;
 		private readonly IHubContext<AngularHub> _angularHub;
+		private static readonly JsonSerializerOptions _options = new JsonSerializerOptions
+		{
+			IgnoreNullValues = true
+		};
 
 		public ServerJarService(IHttpClientFactory clientFactory, IHubContext<AngularHub> angularHub)
 		{
@@ -34,7 +39,8 @@ namespace MCServerWebWrapper.Server.Services
 
 			if (response.IsSuccessStatusCode)
 			{
-				var manifest = await response.Content.ReadAsAsync<VersionManifest>();
+				var responseStream = await response.Content.ReadAsStreamAsync();
+				var manifest = await JsonSerializer.DeserializeAsync<VersionManifest>(responseStream, _options);
 
 				var filteredVersions = manifest.Versions.Where(e => e.Type == "release");
 				return filteredVersions;
@@ -48,10 +54,15 @@ namespace MCServerWebWrapper.Server.Services
 		public async Task<Uri> GetJarUriFromVersion(VanillaVersion version)
 		{
 			var client = _clientFactory.CreateClient();
-
 			var response = await client.GetAsync(version.Url);
+
+			Uri downloadUri = null;
 			var json = await response.Content.ReadAsStringAsync();
-			return OfficialVersion.FromJson(json).Downloads.Server.Url;
+			using (JsonDocument document = JsonDocument.Parse(json, new JsonDocumentOptions { MaxDepth = 64 }))
+            {
+				downloadUri = new Uri(document.RootElement.GetProperty("downloads").GetProperty("server").GetProperty("url").GetString());
+            }
+			return downloadUri;
 		}
 
 		public Task DownloadJar(string serverId, Uri jarUrl, string absServerPath)

@@ -200,7 +200,7 @@ namespace MCServerWebWrapper.Server.Services
             {
                 //var containers = await _docker.Containers.ListContainersAsync(new ContainersListParameters { All = true });
 
-                var stream = await _docker.Containers.AttachContainerAsync(server.ContainerId, true, new ContainerAttachParameters
+                var stream = await _docker.Containers.AttachContainerAsync(server.ContainerId, false, new ContainerAttachParameters
                 {
                     DetachKeys = "ctrl-@",
                     Stderr = true,
@@ -212,7 +212,7 @@ namespace MCServerWebWrapper.Server.Services
                 var tokenSource = new CancellationTokenSource();
                 var manager = new StreamManager(server.Id, server.ContainerId, stream, tokenSource);
                 manager.OutputReceived += s_OutputReceived;
-                manager.StatUpdateReceived += s_StatusUpdated;
+                manager.StatusUpdated += s_StatusUpdated;
 
                 Task.Run(async () => await _docker.Containers.GetContainerStatsAsync(server.ContainerId, new ContainerStatsParameters { Stream = true }, manager.StatProgress, tokenSource.Token));
 

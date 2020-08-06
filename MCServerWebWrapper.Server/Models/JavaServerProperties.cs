@@ -4,9 +4,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
+using System.Text.Json;
 using System.Text;
-using Newtonsoft.Json.Linq;
 
 namespace MCServerWebWrapper.Server.Models
 {
@@ -55,37 +54,45 @@ namespace MCServerWebWrapper.Server.Models
 			EnforceWhitelist = false;
 		}
 
-		public JavaServerProperties FromFile(string serverPropertiesPath)
+		public async Task<JavaServerProperties> FromFile(string serverPropertiesPath)
 		{
-			var jsonObject = new JObject();
+			JavaServerProperties properties = null;
 			using (var streamReader = File.OpenText(serverPropertiesPath))
 			{
-				while (!streamReader.EndOfStream)
-				{
-					var line = streamReader.ReadLine();
-					if (!line.StartsWith("#"))
-					{
-						var lineKeyAndValue = line.Split("=");
-						var key = KeyToPascalCase(lineKeyAndValue[0]);
-						var value = lineKeyAndValue[1];
-						if (Int32.TryParse(value, out int intValue))
+				using (var writeStream = new MemoryStream())
+                {
+					using (var writer = new Utf8JsonWriter(writeStream))
+                    {
+						writer.WriteStartObject();
+						while (!streamReader.EndOfStream)
 						{
-							jsonObject.Add(key, intValue);
+							var line = streamReader.ReadLine();
+							if (!line.StartsWith("#"))
+							{
+								var lineKeyAndValue = line.Split("=");
+								var key = KeyToPascalCase(lineKeyAndValue[0]);
+								var value = lineKeyAndValue[1];
+								if (Int32.TryParse(value, out int intValue))
+								{
+									writer.WriteNumber(key, intValue);
+								}
+								else if (Boolean.TryParse(value, out var boolValue))
+								{
+									writer.WriteBoolean(key, boolValue);
+								}
+								else
+								{
+									writer.WriteString(key, value);
+								}
+							}
 						}
-						else if (Boolean.TryParse(value, out var boolValue))
-						{
-							jsonObject.Add(value, boolValue);
-						}
-						else
-						{
-							jsonObject.Add(key, value);
-						}
+						writer.WriteEndObject();
 					}
+					properties = await JsonSerializer.DeserializeAsync<JavaServerProperties>(writeStream);
 				}
-				streamReader.Dispose();
 			}
-			var serializer = new JsonSerializer();
-			return (JavaServerProperties)serializer.Deserialize(new JTokenReader(jsonObject), typeof(JavaServerProperties));
+			if (properties == null) throw new InvalidDataException($"Unable to read the Java MC server properties from {serverPropertiesPath}");
+			return properties;
 		}
 
 		private string KeyToPascalCase(string key)

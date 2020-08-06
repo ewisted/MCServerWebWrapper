@@ -6,10 +6,11 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SpaServices.AngularCli;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.SpaServices.Extensions;
 using System;
+using Microsoft.AspNetCore.SpaServices.AngularCli;
 
 namespace MCServerWebWrapper
 {
@@ -45,7 +46,7 @@ namespace MCServerWebWrapper
 			services.AddSingleton<ServerJarService>();
 			services.AddTransient<IServerRepo, ServerMongoRepo>();
 			services.AddTransient<IUserRepo, UserMongoRepo>();
-			services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+			services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Latest);
 
 			// In production, the Angular files will be served from this directory
 			services.AddSpaStaticFiles(configuration =>
@@ -55,9 +56,9 @@ namespace MCServerWebWrapper
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-		public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+		public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
 		{
-			if (env.IsDevelopment())
+			if (env.EnvironmentName == "Development")
 			{
 				app.UseDeveloperExceptionPage();
 			}
@@ -72,16 +73,12 @@ namespace MCServerWebWrapper
 			app.UseStaticFiles();
 			app.UseSpaStaticFiles();
 
-			app.UseSignalR(routes =>
-			{
-				routes.MapHub<AngularHub>("/angular-hub");
-			});
+			app.UseRouting();
 
-			app.UseMvc(routes =>
+			app.UseEndpoints(builder =>
 			{
-				routes.MapRoute(
-					name: "default",
-					template: "{controller}/{action=Index}/{id?}");
+				builder.MapHub<AngularHub>("/angular-hub");
+				builder.MapDefaultControllerRoute();
 			});
 
 			app.UseSpa(spa =>
@@ -91,7 +88,7 @@ namespace MCServerWebWrapper
 
 				spa.Options.SourcePath = "ClientApp";
 
-				if (env.IsDevelopment())
+				if (env.EnvironmentName == "Development")
 				{
 					spa.UseAngularCliServer(npmScript: "start");
 				}
