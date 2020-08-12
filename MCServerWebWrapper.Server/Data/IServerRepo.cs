@@ -14,6 +14,7 @@ namespace MCServerWebWrapper.Server.Data
 		Task<IEnumerable<Output>> GetLogData(string id, int offset, int take);
 		Task<IEnumerable<Output>> GetLogData(string id, DateTime from, DateTime to);
 		Task<JavaServer> GetServerById(string id);
+		Task<JavaServer> GetServerByContainerId(string containerId);
 		Task<JavaServer> GetServerByName(string name);
 		Task AddLogDataByServerId(string id, Output output);
 		Task AddPlayerCountDataByServerId(string id, PlayerCountChange change);

@@ -10,5 +10,10 @@ namespace MCServerWebWrapper.Server.Data.Models
         public IList<string> Operators { get; set; }
         public IList<string> WhitelistedPlayers { get; set; }
         public BedrockProperties Properties { get; set; }
+
+        public BedrockServer()
+        {
+            Image = "itzg/minecraft-bedrock-server";
+        }
     }
 }

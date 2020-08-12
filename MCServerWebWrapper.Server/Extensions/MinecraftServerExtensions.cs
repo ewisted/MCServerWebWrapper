@@ -30,7 +30,8 @@ namespace MCServerWebWrapper.Server.Extensions
                 AttachStderr = true,
                 AttachStdin = true,
                 AttachStdout = true,
-                Tty = true
+                Tty = true,
+                StdinOnce = true
             };
 
             return Task.FromResult(parameters);

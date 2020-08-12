@@ -13,6 +13,7 @@ namespace MCServerWebWrapper.Server.Data.Models
         [BsonRepresentation(BsonType.ObjectId)]
         public string Id { get; set; }
         public string Name { get; set; }
+        public string Image { get; set; }
         public string ServerPath { get; set; }
         public bool IsRunning { get; set; }
         public int TimesRan { get; set; }

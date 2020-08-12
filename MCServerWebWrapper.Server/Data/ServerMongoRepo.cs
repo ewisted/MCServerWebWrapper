@@ -63,6 +63,12 @@ namespace MCServerWebWrapper.Server.Data
 			return Task.FromResult(server);
 		}
 
+		public Task<JavaServer> GetServerByContainerId(string containerId)
+        {
+			var server = _servers.AsQueryable().Where(s => s.ContainerId == containerId).FirstOrDefault();
+			return Task.FromResult(server);
+        }
+
 		public Task<JavaServer> GetServerByName(string name)
 		{
 			var server = _servers.AsQueryable().Where(s => s.Name == name).FirstOrDefault();

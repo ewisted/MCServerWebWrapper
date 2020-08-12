@@ -29,6 +29,7 @@
   <ItemGroup>
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="6.1.0" />
     <PackageReference Include="CoreRCON" Version="4.5.1" />
+    <PackageReference Include="Docker.DotNet.NetStandard2.1" Version="3.125.3" />
     <PackageReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="3.1.6" />
     <PackageReference Include="MongoDB.Driver" Version="2.8.1" />
@@ -50,12 +51,6 @@
     <None Remove="ClientApp\src\app\models\user.ts" />
     <None Remove="ClientApp\src\app\models\vanilla-version.ts" />
     <None Remove="ClientApp\src\app\servers\server\server.component.ts" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="Docker.DotNet">
-      <HintPath>..\Extern\Docker.DotNet.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
   <ItemGroup>

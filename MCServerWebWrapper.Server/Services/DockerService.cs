@@ -44,24 +44,22 @@ namespace MCServerWebWrapper.Server.Services
             string dockerEndpoint = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
                 ? "npipe://./pipe/docker_engine"
                 : "unix:///var/run/docker.sock";
-            _docker = new DockerClientConfiguration(new Uri(dockerEndpoint)).CreateClient();
-            Task.Run(async () => await EnsureMCImageExists());
+            _docker = new DockerClientConfiguration(new Uri(dockerEndpoint)).CreateClient(new System.Version("1.25"));
+            InitializeState();
         }
 
-        public async Task EnsureMCImageExists()
+        public async void InitializeState()
         {
-            await _docker.Images.CreateImageAsync(
-                new ImagesCreateParameters
+            var containers = await _docker.Containers.ListContainersAsync(new ContainersListParameters { All = true });
+            foreach (var container in containers)
+            {
+                var server = await _repo.GetServerByContainerId(container.ID);
+                if (server != null)
                 {
-                    Repo = "itzg/minecraft-server"
-                },
-                new AuthConfig
-                {
-                    Username = _dockerHubConfig["Username"],
-                    Password = _dockerHubConfig["AccessToken"]
-                },
-                new Progress<JSONMessage>()
-            );
+                    await AttachContainer(server);
+                    Console.WriteLine($"Container attached: {server.ContainerId}");
+                }
+            }
         }
 
         public async Task<IEnumerable<Output>> GetCurrentOutput(string serverId, TimeSpan timeFrame)
@@ -92,6 +90,34 @@ namespace MCServerWebWrapper.Server.Services
                 PlayerCountChanges = new List<PlayerCountChange>(),
                 Operators = new List<string>()
             };
+
+            // Get the image if it doesn't already exist
+            try
+            {
+                await _docker.Images.InspectImageAsync(server.Image);
+            }
+            catch (DockerImageNotFoundException)
+            {
+                try
+                {
+                    await _docker.Images.CreateImageAsync(
+                        new ImagesCreateParameters
+                        {
+                            FromImage = $"{server.Image}:{server.Version}"
+                        },
+                        new AuthConfig
+                        {
+                            Username = _dockerHubConfig["Username"],
+                            Password = _dockerHubConfig["AccessToken"]
+                        },
+                        new Progress<JSONMessage>()
+                    );
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex);
+                }
+            }
 
             // Build the server path
             var buildPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
@@ -195,32 +221,10 @@ namespace MCServerWebWrapper.Server.Services
             var resp = await _docker.Containers.CreateContainerAsync(createParams);
             server.ContainerId = resp.ID;
 
-            var running = await _docker.Containers.StartContainerAsync(server.ContainerId, new ContainerStartParameters());
+            var running = await _docker.Containers.StartContainerAsync(server.ContainerId, new ContainerStartParameters { DetachKeys = "ctrl-@" });
             if (running)
             {
-                //var containers = await _docker.Containers.ListContainersAsync(new ContainersListParameters { All = true });
-
-                var stream = await _docker.Containers.AttachContainerAsync(server.ContainerId, false, new ContainerAttachParameters
-                {
-                    DetachKeys = "ctrl-@",
-                    Stderr = true,
-                    Stdin = true,
-                    Stdout = true,
-                    Stream = true
-                });
-
-                var tokenSource = new CancellationTokenSource();
-                var manager = new StreamManager(server.Id, server.ContainerId, stream, tokenSource);
-                manager.OutputReceived += s_OutputReceived;
-                manager.StatusUpdated += s_StatusUpdated;
-
-                Task.Run(async () => await _docker.Containers.GetContainerStatsAsync(server.ContainerId, new ContainerStatsParameters { Stream = true }, manager.StatProgress, tokenSource.Token));
-
-                _runningServers.AddOrUpdate(server.Id, manager, (key, oldValue) =>
-                {
-                    oldValue.Dispose();
-                    return manager;
-                });
+                await AttachContainer(server);
 
                 server.MaxRamMB = maxRamMB;
                 server.InitRamMB = minRamMB;
@@ -246,11 +250,13 @@ namespace MCServerWebWrapper.Server.Services
             try
             {
                 await _docker.Containers.StopContainerAsync(server.ContainerId, new ContainerStopParameters { WaitBeforeKillSeconds = 5 });
+                _runningServers.TryRemove(id, out var manager);
+                if (manager != null)
+                {
+                    manager.Dispose();
+                }
                 await _docker.Containers.RemoveContainerAsync(server.ContainerId, new ContainerRemoveParameters { Force = true });
                 server.ContainerId = null;
-                await _repo.UpsertServer(server);
-                _runningServers.TryRemove(id, out var manager);
-                manager.Dispose();
             }
             catch (Exception ex)
             {
@@ -264,6 +270,43 @@ namespace MCServerWebWrapper.Server.Services
             await _repo.UpsertServer(server);
             await _angularHub.Clients.All.SendAsync(SignalrMethodNames.ServerStopped, server.Id);
             return true;
+        }
+
+        private async Task AttachContainer(ServerBase server)
+        {
+            //await _docker.Exec.ExecCreateContainerAsync(server.ContainerId, new ContainerExecCreateParameters
+            //{
+            //    DetachKeys = "ctrl-@",
+            //    AttachStderr = true,
+            //    AttachStdin = true,
+            //    AttachStdout = true,
+            //    Tty = true,
+            //    Detach = false
+            //});
+
+            //var stream = await _docker.Exec.StartAndAttachContainerExecAsync(server.ContainerId, true);
+
+            var stream = await _docker.Containers.AttachContainerAsync(server.ContainerId, true, new ContainerAttachParameters
+            {
+                DetachKeys = "ctrl-@",
+                Stderr = true,
+                Stdin = true,
+                Stdout = true,
+                Stream = true
+            });
+
+            var tokenSource = new CancellationTokenSource();
+            var manager = new StreamManager(server.Id, server.ContainerId, stream, tokenSource);
+            manager.OutputReceived += s_OutputReceived;
+            manager.StatusUpdated += s_StatusUpdated;
+
+            _ = Task.Run(async () => await _docker.Containers.GetContainerStatsAsync(server.ContainerId, new ContainerStatsParameters { Stream = true }, manager.StatProgress, tokenSource.Token));
+
+            _runningServers.AddOrUpdate(server.Id, manager, (key, oldValue) =>
+            {
+                oldValue.Dispose();
+                return manager;
+            });
         }
 
         private async Task HandleOutput(string serverId, string line)

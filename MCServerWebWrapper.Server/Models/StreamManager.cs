@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -36,8 +37,6 @@ namespace MCServerWebWrapper.Server.Models
 
         private readonly CancellationTokenSource _tokenSource;
         private readonly MultiplexedStream _stream;
-        private Stream _stdout;
-        private Stream _stderr;
         private DateTime? _lastStatusUpdateTimeStamp;
 
         public StreamManager(string serverId, string containerId, MultiplexedStream stream, CancellationTokenSource tokenSource = null)
@@ -53,43 +52,60 @@ namespace MCServerWebWrapper.Server.Models
 
         public void InitializeState()
         {
-            _stdout = new MemoryStream();
-            _stderr = new MemoryStream();
             //Task.Run(async () => await _stream.CopyFromAsync(_stdin, Token));
-            Task.Run(async () => await _stream.CopyOutputToAsync(Stream.Null, _stdout, _stderr, Token));
-            Task.Run(async () => await ReadOutput(_tokenSource.Token));
+            //Task.Run(async () => await _stream.CopyOutputToAsync(Stream.Null, _stdout, _stderr, Token));
+            Task.Run(async () => await ReadOutput());
         }
 
-        private async Task ReadOutput(CancellationToken token)
+        private async Task ReadOutput()
         {
             await foreach (var output in _stream.StreamOutputAsync(Token))
             {
-
+                switch (output.target)
+                {
+                    case MultiplexedStream.TargetStream.StandardOut:
+                        ProcessOutput(output.result);
+                        break;
+                    case MultiplexedStream.TargetStream.StandardError:
+                        ProcessError(output.result);
+                        break;
+                    case MultiplexedStream.TargetStream.StandardIn:
+                        break;
+                    default:
+                        break;
+                }
             }
         }
 
         private void ProcessOutput(string output)
         {
-            var eArgs = new OutputReceivedEventArgs()
+            if (!string.IsNullOrWhiteSpace(output))
             {
-                Data = output,
-            };
-            OutputReceived.Invoke(ServerId, eArgs);
+                var eArgs = new OutputReceivedEventArgs()
+                {
+                    Data = output,
+                };
+                OutputReceived.Invoke(ServerId, eArgs);
+            }
         }
 
         private void ProcessError(string error)
         {
-            var eArgs = new OutputReceivedEventArgs()
+            if (!string.IsNullOrWhiteSpace(error))
             {
-                Data = error,
-            };
-            ErrorReceived.Invoke(ServerId, eArgs);
+                var eArgs = new OutputReceivedEventArgs()
+                {
+                    Data = error,
+                };
+                ErrorReceived.Invoke(ServerId, eArgs);
+            }
         }
 
         private void OnProcessStatistics(object sender, ContainerStatsResponse response)
         {
             try
             {
+                if (response.CPUStats.CPUUsage.PercpuUsage == null) return;
                 var updateTimeStamp = DateTime.UtcNow;
                 if (!_lastStatusUpdateTimeStamp.HasValue || updateTimeStamp - _lastStatusUpdateTimeStamp >= TimeSpan.FromSeconds(1))
                 {
@@ -134,18 +150,14 @@ namespace MCServerWebWrapper.Server.Models
 
         public async Task SendInput(string msg)
         {
-            var bytes = System.Text.Encoding.UTF8.GetBytes(msg);
+            var bytes = Encoding.UTF8.GetBytes(msg + "\n");
             await _stream.WriteAsync(bytes, 0, bytes.Length, Token).ConfigureAwait(false);
-            //await _writer.WriteLineAsync(msg);
-            //await _writer.FlushAsync();
         }
 
         public void Dispose()
         {
-            _tokenSource.Cancel();
-            _stdout.Dispose();
-            _stderr.Dispose();
             StatProgress.ProgressChanged -= OnProcessStatistics;
+            _tokenSource.Cancel();
             _stream.Dispose();
         }
     }

@@ -10,7 +10,6 @@ namespace MCServerWebWrapper.Server.Data.Models
 {
 	public class JavaServer : ServerBase
 	{
-        
         public int MaxRamMB { get; set; }
         public int InitRamMB { get; set; }
         public IList<string> Operators { get; set; }
@@ -21,5 +20,11 @@ namespace MCServerWebWrapper.Server.Data.Models
         public Uri ServerIconUri { get; set; }
         public JavaProperties Properties { get; set; }
         public IList<Output> Logs { get; set; }
+
+        public JavaServer()
+        {
+            Image = "itzg/minecraft-server";
+            Version = "latest";
+        }
 	}
 }
